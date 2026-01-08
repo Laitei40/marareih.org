@@ -1,35 +1,80 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Mara Language Preservation (MLP)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Mara Language Preservation — community-driven efforts to document, standardize, and enable the Mara language on modern platforms">
+  <title>Mara Language Preservation — Home</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 </head>
 <body>
-  <header>
-    <h1>Mara Language Preservation (MLP)</h1>
-    <nav>
-      <a href="index.html">Home</a>
-      <a href="projects.html">Projects</a>
-      <a href="about.html">About</a>
-      <a href="contact.html">Contact</a>
-    </nav>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container nav-row">
+      <a class="brand" href="index.html" aria-label="Mara Language Preservation homepage">
+        <img src="assets/logo.svg" class="brand-image" width="36" height="36" alt="Mara Language Preservation logo">
+        <span class="brand-text">Mara Language Preservation</span>
+      </a>
+
+      <button class="nav-toggle" aria-expanded="false" aria-controls="primary-navigation">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="hamburger"></span>
+      </button>
+
+      <nav id="primary-navigation" class="primary-nav">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="projects.html">Projects</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
   </header>
 
-  <main>
-    <p>
-      Mara Language Preservation (MLP) is a community-driven initiative dedicated
-      to preserving, standardizing, and digitally enabling the Mara language.
-    </p>
-    <p>
-      We work on language documentation, keyboards, dictionaries, localization,
-      and open linguistic data to support Mara across modern technologies.
-    </p>
+  <main id="main">
+    <section class="hero">
+      <div class="container hero-inner" data-anim="fade-up">
+        <h1>Preserve. Standardize. Enable Mara.</h1>
+        <p class="lead">Community-driven tools, documentation, and open data to keep the Mara language vibrant in the digital age.</p>
+        <p class="hero-actions">
+          <a class="btn" href="projects.html">Explore Projects</a>
+          <a class="btn ghost" href="about.html">Learn More</a>
+        </p>
+      </div>
+      <div class="wave" aria-hidden="true"></div>
+    </section>
+
+    <section class="container features" aria-label="Highlights">
+      <div class="grid">
+        <article class="feature" data-anim="fade-up">
+          <h3>Open Datasets</h3>
+          <p>Public linguistic datasets to support research and localization.</p>
+        </article>
+        <article class="feature" data-anim="fade-up" data-delay="80">
+          <h3>Keyboards & Tools</h3>
+          <p>Keyman keyboards, layout guides, and input support for Mara.</p>
+        </article>
+        <article class="feature" data-anim="fade-up" data-delay="160">
+          <h3>Documentation</h3>
+          <p>Guides for orthography, Unicode, and project collaboration.</p>
+        </article>
+      </div>
+    </section>
   </main>
 
-  <footer>
-    <p>© Mara Language Preservation</p>
+  <footer class="site-footer">
+    <div class="container footer-row">
+      <p>© <span id="year">2026</span> Mara Language Preservation — <a href="contact.html">Get in touch</a></p>
+      <nav class="footer-nav">
+        <a href="https://github.com/" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </div>
   </footer>
 </body>
 </html>

@@ -1,30 +1,69 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Projects – MLP</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Projects — Mara Language Preservation</title>
+  <meta name="description" content="Projects supporting the Mara language: keyboards, datasets, dictionaries, and localization efforts.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 </head>
 <body>
-  <header>
-    <h1>Projects</h1>
-    <nav>
-      <a href="index.html">Home</a>
-      <a href="projects.html">Projects</a>
-      <a href="about.html">About</a>
-      <a href="contact.html">Contact</a>
-    </nav>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container nav-row">
+      <a class="brand" href="index.html" aria-label="Mara Language Preservation homepage">
+        <img src="assets/logo.svg" class="brand-image" width="36" height="36" alt="Mara Language Preservation logo">
+        <span class="brand-text">MLP Projects</span>
+      </a>
+      <nav class="primary-nav">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="projects.html" aria-current="page">Projects</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
   </header>
 
-  <main>
-    <ul>
-      <li>Mara Language on CLDR</li>
-      <li>Mara Keyboard (Keyman)</li>
-      <li>English ⇄ Mara Dictionary</li>
-      <li>Mara Kyhbu (Mara Encyclopedia)</li>
-      <li>Open Mara Language Datasets</li>
-    </ul>
+  <main id="main">
+    <section class="container content" data-anim="fade-up">
+      <h1>Projects</h1>
+      <p class="lead">A selection of initiatives that help document, standardize, and enable Mara online.</p>
+
+      <div class="grid cards">
+        <article class="card" data-anim="fade-up">
+          <h3>Mara in CLDR</h3>
+          <p>Localization data and locale support to ensure Mara appears correctly in internationalized apps.</p>
+          <p class="meta">Status: Active</p>
+        </article>
+
+        <article class="card" data-anim="fade-up" data-delay="60">
+          <h3>Mara Keyboard (Keyman)</h3>
+          <p>Keyman layouts and installation guides so speakers can type Mara across platforms.</p>
+          <p class="meta">Platform: Windows, macOS, Mobile</p>
+        </article>
+
+        <article class="card" data-anim="fade-up" data-delay="120">
+          <h3>English ⇄ Mara Dictionary</h3>
+          <p>Open bilingual dictionary with definitions, example sentences, and audio where available.</p>
+        </article>
+
+        <article class="card" data-anim="fade-up" data-delay="180">
+          <h3>Mara Kyhbu</h3>
+          <p>Community encyclopedia and cultural resources written by native speakers.</p>
+        </article>
+      </div>
+    </section>
   </main>
+
+  <footer class="site-footer">
+    <div class="container footer-row">
+      <p>© <span id="year2">2026</span> Mara Language Preservation</p>
+    </div>
+  </footer>
 </body>
 </html>
