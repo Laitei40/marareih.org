@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Contact — Mara Language Preservation</title>
+  <meta name="description" content="Get in touch with the Mara Language Preservation project.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- Cloudflare Turnstile: replace YOUR_TURNSTILE_SITE_KEY with your site key -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <script defer src="script.js"></script>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container nav-row">
+      <a class="brand" href="index.html" aria-label="Mara Language Preservation homepage">
+        <img src="assets/logo.svg" class="brand-image" width="36" height="36" alt="Mara Language Preservation logo">
+        <span class="brand-text">Mara Language Preservation</span>
+      </a>
+      <nav class="primary-nav">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="projects.html">Projects</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html" aria-current="page">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="container content" data-anim="fade-up">
+      <h1>Contact</h1>
+      <p class="lead">Have a question, want to collaborate, or contribute data? Reach out.</p>
+
+        <form id="contactForm" class="contact-form">
+          <label for="name">Name</label>
+          <input id="name" name="name" type="text" required>
+
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required>
+
+          <label for="message">Message</label>
+          <textarea id="message" name="message" rows="6" required></textarea>
+
+          <!-- Turnstile -->
+          <div class="cf-turnstile"
+              data-sitekey="YOUR_TURNSTILE_SITE_KEY"
+              data-theme="dark"></div>
+
+          <button class="btn" type="submit">Send message</button>
+
+          <p id="formStatus" class="small"></p>
+        </form>
+
+      <p class="alt">Prefer email? <a href="mailto:teiteipara@gmail.com">teiteipara@gmail.com</a></p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-row">
+      <p>© <span id="year4">2026</span> Mara Language Preservation</p>
+    </div>
+  </footer>
+</body>
+</html>
