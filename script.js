@@ -1,100 +1,96 @@
-// Small JS for nav toggle and reveal-on-scroll animations
-(function(){
+// Small JS for nav toggle, reveal-on-scroll animations, and contact form
+(function () {
   'use strict';
 
-  // Mobile nav toggle
+  /* ------------------ Mobile nav toggle ------------------ */
   const navToggle = document.querySelector('.nav-toggle');
-  const nav = document.getElementById('primary-navigation') || document.querySelector('.primary-nav');
-  if(navToggle && nav){
-    navToggle.addEventListener('click', function(){
+  const nav =
+    document.getElementById('primary-navigation') ||
+    document.querySelector('.primary-nav');
+
+  if (navToggle && nav) {
+    navToggle.addEventListener('click', () => {
       const isOpen = nav.classList.toggle('open');
-      navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      navToggle.setAttribute('aria-expanded', String(isOpen));
     });
   }
 
-  // Simple reveal on scroll using IntersectionObserver
+  /* ------------------ Reveal on scroll ------------------ */
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if('IntersectionObserver' in window && !prefersReduced){
-    const obs = new IntersectionObserver((entries)=>{
-      entries.forEach(entry=>{
-        if(entry.isIntersecting){
-          entry.target.classList.add('in-view');
-          obs.unobserve(entry.target);
-        }
-      });
-    },{threshold:0.12});
 
-    document.querySelectorAll('[data-anim]').forEach(el=>obs.observe(el));
+  if ('IntersectionObserver' in window && !prefersReduced) {
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in-view');
+            obs.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12 }
+    );
+
+    document.querySelectorAll('[data-anim]').forEach((el) => obs.observe(el));
   } else {
-    // If no observer or reduced motion, just show all
-    document.querySelectorAll('[data-anim]').forEach(el=>el.classList.add('in-view'));
+    document.querySelectorAll('[data-anim]').forEach((el) =>
+      el.classList.add('in-view')
+    );
   }
 
-  // Contact form: ensure Turnstile token exists before submit (client-side check)
-  const contactForm = document.getElementById('contactForm');
-  if(contactForm){
-    contactForm.addEventListener('submit', function(e){
-      const tokenField = contactForm.querySelector('[name="cf-turnstile-response"]');
-      if(!tokenField || !tokenField.value || !tokenField.value.trim()){
-        e.preventDefault();
-        // Attempt to focus the Turnstile iframe if present
-        const frame = document.querySelector('.cf-turnstile iframe');
-        if(frame) frame.focus();
-        alert('Please complete the anti-bot check (Cloudflare Turnstile) before submitting.');
-        return false;
+  /* ------------------ Contact form ------------------ */
+  const form = document.getElementById('contactForm');
+  const statusEl = document.getElementById('formStatus');
+
+  if (!form || !statusEl) return; // ✅ prevent errors on other pages
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const token = document.querySelector(
+      'input[name="cf-turnstile-response"]'
+    )?.value;
+
+    if (!token) {
+      statusEl.textContent = 'Please complete the verification.';
+      return;
+    }
+
+    const payload = {
+      name: form.name.value.trim(),
+      email: form.email.value.trim(),
+      message: form.message.value.trim(),
+      token
+    };
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+
+    statusEl.textContent = 'Sending…';
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+
+      if (res.ok && result.success) {
+        statusEl.textContent = 'Message sent successfully ✔';
+        form.reset();
+
+        if (window.turnstile?.reset) {
+          window.turnstile.reset();
+        }
+      } else {
+        statusEl.textContent = result.error || 'Failed to send message.';
       }
-    });
-  }
-
-  // Update year placeholders
-  const y = new Date().getFullYear();
-  ['year','year2','year3','year4'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.textContent = y;
+    } catch {
+      statusEl.textContent = 'Network error. Please try again later.';
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
   });
 })();
-
-const form = document.getElementById("contactForm");
-const statusEl = document.getElementById("formStatus");
-
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const token = document.querySelector(
-    'input[name="cf-turnstile-response"]'
-  )?.value;
-
-  if (!token) {
-    statusEl.textContent = "Please complete the verification.";
-    return;
-  }
-
-  const data = {
-    name: form.name.value,
-    email: form.email.value,
-    message: form.message.value,
-    token
-  };
-
-  statusEl.textContent = "Sending…";
-
-  try {
-    const res = await fetch("/api/contact", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    });
-
-    const result = await res.json();
-
-    if (result.success) {
-      statusEl.textContent = "Message sent successfully ✔";
-      form.reset();
-      turnstile.reset();
-    } else {
-      statusEl.textContent = result.error || "Failed to send.";
-    }
-  } catch {
-    statusEl.textContent = "Network error. Try again later.";
-  }
-});
