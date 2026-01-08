@@ -52,10 +52,13 @@
         <label for="message">Message</label>
         <textarea id="message" name="message" rows="6" required></textarea>
 
-        <!-- Turnstile (MLP widget) -->
-        <div class="cf-turnstile"
-             data-sitekey="0x4AAAAAACLWQIj9umfqaLzY"
-             data-theme="dark"></div>
+        <!-- Cloudflare Turnstile (Managed, invisible) -->
+        <div
+          class="cf-turnstile"
+          data-sitekey="0x4AAAAAACLWQIj9umfqaLzY"
+          data-theme="dark"
+          data-callback="onTurnstileSuccess">
+        </div>
 
         <button class="btn" type="submit">Send message</button>
 
@@ -74,5 +77,14 @@
       <p>© <span id="year4">2026</span> Mara Language Preservation</p>
     </div>
   </footer>
+
+  <!-- Turnstile callback (required for Managed mode) -->
+  <script>
+    window.onTurnstileSuccess = function () {
+      // Token is generated and available in
+      // input[name="cf-turnstile-response"]
+      // No UI needed (Managed mode)
+    };
+  </script>
 </body>
 </html>
