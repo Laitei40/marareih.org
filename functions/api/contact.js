@@ -1,5 +1,7 @@
 export async function onRequestPost({ request, env }) {
   try {
+    console.log('Contact POST invoked', { url: request.url, time: new Date().toISOString() });
+
     const { name, email, message, token } = await request.json();
 
     if (!name || !email || !message || !token) {
@@ -9,17 +11,52 @@ export async function onRequestPost({ request, env }) {
       );
     }
 
-    // Verify Turnstile
+    // Verify Turnstile (with timeout and robust error handling)
     const formData = new FormData();
     formData.append("secret", env.TURNSTILE_SECRET);
     formData.append("response", token);
 
-    const verifyRes = await fetch(
-      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-      { method: "POST", body: formData }
-    );
+    let verifyRes;
+    let verify;
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 8000);
+      try {
+        verifyRes = await fetch(
+          "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+          { method: "POST", body: formData, signal: ctrl.signal }
+        );
+      } finally {
+        clearTimeout(timer);
+      }
 
-    const verify = await verifyRes.json();
+      if (!verifyRes.ok) {
+        const text = await verifyRes.text().catch(() => null);
+        console.error('Turnstile non-OK response', verifyRes.status, text);
+        return new Response(
+          JSON.stringify({ success: false, error: 'Turnstile service error', provider: { status: verifyRes.status, statusText: verifyRes.statusText, textSnippet: text ? text.slice(0,120) : null } }),
+          { status: 502, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+      try {
+        verify = await verifyRes.json();
+      } catch (e) {
+        const text = await verifyRes.text().catch(() => null);
+        console.error('Turnstile returned non-JSON', text);
+        return new Response(
+          JSON.stringify({ success: false, error: 'Turnstile returned invalid response', textSnippet: text ? text.slice(0,120) : null }),
+          { status: 502, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+    } catch (err) {
+      console.error('Turnstile fetch error:', err);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Turnstile request failed', details: String(err) }),
+        { status: 502, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     if (!verify.success) {
       console.error("Turnstile verification failed:", verify);
@@ -60,11 +97,18 @@ ${message}`
     let mailResult = null;
 
     try {
-      mailRes = await fetch("https://api.mailchannels.net/tx/v1/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(mailPayload)
-      });
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 10000);
+      try {
+        mailRes = await fetch("https://api.mailchannels.net/tx/v1/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(mailPayload),
+          signal: ctrl.signal
+        });
+      } finally {
+        clearTimeout(timer);
+      }
 
       try {
         mailResult = await mailRes.json();
@@ -100,7 +144,7 @@ ${message}`
     } catch (err) {
       console.error("MailChannels request error:", err);
       return new Response(
-        JSON.stringify({ success: false, error: "Email send error" }),
+        JSON.stringify({ success: false, error: "Email send error", details: String(err) }),
         { status: 502, headers: { "Content-Type": "application/json" } }
       );
     }

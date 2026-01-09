@@ -15,12 +15,37 @@ export default {
     formData.append("secret", env.TURNSTILE_SECRET);
     formData.append("response", token);
 
-    const verifyRes = await fetch(
-      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-      { method: "POST", body: formData }
-    );
+    let verifyRes;
+    let verify;
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 8000);
+      try {
+        verifyRes = await fetch(
+          "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+          { method: "POST", body: formData, signal: ctrl.signal }
+        );
+      } finally { clearTimeout(timer); }
 
-    const verify = await verifyRes.json();
+      if (!verifyRes.ok) {
+        const text = await verifyRes.text().catch(() => null);
+        console.error('Turnstile non-OK response', verifyRes.status, text);
+        return Response.json({ success: false, error: 'Turnstile service error', provider: { status: verifyRes.status, statusText: verifyRes.statusText, textSnippet: text ? text.slice(0,120) : null } });
+      }
+
+      try {
+        verify = await verifyRes.json();
+      } catch (e) {
+        const text = await verifyRes.text().catch(() => null);
+        console.error('Turnstile returned non-JSON', text);
+        return Response.json({ success: false, error: 'Turnstile returned invalid response', textSnippet: text ? text.slice(0,120) : null });
+      }
+
+    } catch (err) {
+      console.error('Turnstile fetch error:', err);
+      return Response.json({ success: false, error: 'Turnstile request failed', details: String(err) });
+    }
+
     if (!verify.success) {
       console.error("Turnstile verification failed:", verify);
       return Response.json({ success: false, error: "Verification failed", verify });
