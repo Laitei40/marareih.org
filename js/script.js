@@ -85,9 +85,25 @@
         body: JSON.stringify(payload)
       });
 
-      const result = await res.json();
+      // Try to parse JSON, but fall back to text if response isn't JSON
+      let result = null;
+      let text = null;
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        try {
+          result = await res.json();
+        } catch (err) {
+          console.error('Failed to parse JSON response', err);
+          text = await res.text().catch(() => null);
+        }
+      } else {
+        text = await res.text().catch(() => null);
+      }
 
-      if (res.ok && result.success) {
+      // Log for debugging
+      console.debug('Contact response', { status: res.status, headers: Object.fromEntries(res.headers), json: result, text });
+
+      if (res.ok && result && result.success) {
         statusEl.textContent = 'Message sent successfully ✔';
         form.reset();
 
@@ -95,10 +111,21 @@
           window.turnstile.reset();
         }
       } else {
-        statusEl.textContent = result.error || 'Failed to send message.';
+        // Prefer server-provided message, then text, then generic
+        let msg = (result && (result.error || result.message)) || (result && result.verify && 'Verification failed') || text || 'Failed to send message.';
+
+        // If provider details are present, append a short hint (non-sensitive)
+        if (result && result.provider) {
+          const p = result.provider;
+          const snippet = p.textSnippet || (typeof p.json === 'object' ? JSON.stringify(p.json).slice(0,120) : null);
+          msg += snippet ? ` (provider: ${p.status} ${p.statusText} - ${snippet})` : ` (provider: ${p.status} ${p.statusText})`;
+        }
+
+        statusEl.textContent = msg;
       }
-    } catch {
-      statusEl.textContent = 'Network error. Please try again later.';
+    } catch (err) {
+      console.error('Contact submit failed', err);
+      statusEl.textContent = `Network error. ${String(err).slice(0,120)}`;
     } finally {
       if (submitBtn) submitBtn.disabled = false;
     }
