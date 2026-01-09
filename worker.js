@@ -68,12 +68,18 @@ ${message}`
 
       if (!mailRes.ok) {
         console.error("MailChannels failed:", mailRes.status, mailResult);
-        return Response.json({ success: false, error: "Email provider error", details: mailResult });
+        let mailText = null;
+        try {
+          mailText = await mailRes.text();
+        } catch (e) {
+          mailText = null;
+        }
+        return Response.json({ success: false, error: "Email provider error", provider: { status: mailRes.status, statusText: mailRes.statusText, json: mailResult, textSnippet: mailText ? mailText.slice(0, 120) : null } });
       }
 
     } catch (err) {
       console.error("MailChannels request error:", err);
-      return Response.json({ success: false, error: "Email send error" });
+      return Response.json({ success: false, error: "Email send error", details: String(err) });
     }
 
     return Response.json({ success: true });

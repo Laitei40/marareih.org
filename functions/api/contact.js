@@ -74,8 +74,24 @@ ${message}`
 
       if (!mailRes.ok) {
         console.error("MailChannels failed:", mailRes.status, mailResult);
+        // Attempt to include a short text snippet for easier debugging
+        let mailText = null;
+        try {
+          mailText = await mailRes.text();
+        } catch (e) {
+          mailText = null;
+        }
         return new Response(
-          JSON.stringify({ success: false, error: "Email provider error", details: mailResult }),
+          JSON.stringify({
+            success: false,
+            error: "Email provider error",
+            provider: {
+              status: mailRes.status,
+              statusText: mailRes.statusText,
+              json: mailResult,
+              textSnippet: mailText ? mailText.slice(0, 120) : null
+            }
+          }),
           { status: 502, headers: { "Content-Type": "application/json" } }
         );
       }
