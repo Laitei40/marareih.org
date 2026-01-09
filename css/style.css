@@ -68,11 +68,12 @@ label{font-size:.95rem;color:var(--muted)}
   .nav-row{gap:.5rem}
 }
 @media (max-width:720px){
-  .primary-nav{position:absolute;left:0;right:0;top:64px;background:linear-gradient(180deg, rgba(7,18,26,0.96), rgba(7,18,26,0.98));padding:1rem;display:none}
+  .primary-nav{position:absolute;left:0;right:0;top:64px;background:linear-gradient(180deg, rgba(7,18,26,0.96), rgba(7,18,26,0.98));padding:1rem;display:none;z-index:1000}
   .primary-nav.open{display:block}
   .primary-nav ul{flex-direction:column;gap:.5rem}
-  .nav-toggle{display:block}
-}
+  .primary-nav a{display:block;padding:.65rem .5rem}
+  .nav-toggle{display:block;position:relative;z-index:1100}
+} 
 
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce){
