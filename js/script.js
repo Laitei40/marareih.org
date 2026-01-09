@@ -114,6 +114,21 @@
         // Prefer server-provided message, then text, then generic
         let msg = (result && (result.error || result.message)) || (result && result.verify && 'Verification failed') || text || 'Failed to send message.';
 
+        // If Turnstile verification error codes are present, give a specific instruction and reset widget
+        if (result && result.verify && Array.isArray(result.verify['error-codes'])) {
+          const codes = result.verify['error-codes'];
+          if (codes.includes('timeout-or-duplicate') || codes.includes('invalid-input-response')) {
+            msg = 'Verification expired or invalid. Please complete the Turnstile verification again.';
+
+            // Reset the widget so the user can re-verify
+            if (window.turnstile && typeof window.turnstile.reset === 'function') {
+              try { window.turnstile.reset(); } catch (e) { console.warn('turnstile.reset() failed', e); }
+            }
+          } else if (codes.includes('invalid-input-secret')) {
+            msg = 'Server configuration error: Turnstile secret invalid. Please contact the site admin.';
+          }
+        }
+
         // If provider details are present, append a short hint (non-sensitive)
         if (result && result.provider) {
           const p = result.provider;
