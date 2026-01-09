@@ -22,8 +22,9 @@ export async function onRequestPost({ request, env }) {
     const verify = await verifyRes.json();
 
     if (!verify.success) {
+      console.error("Turnstile verification failed:", verify);
       return new Response(
-        JSON.stringify({ success: false, error: "Turnstile verification failed" }),
+        JSON.stringify({ success: false, error: "Turnstile verification failed", verify }),
         { status: 403, headers: { "Content-Type": "application/json" } }
       );
     }

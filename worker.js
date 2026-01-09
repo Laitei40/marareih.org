@@ -22,7 +22,8 @@ export default {
 
     const verify = await verifyRes.json();
     if (!verify.success) {
-      return Response.json({ success: false, error: "Verification failed" });
+      console.error("Turnstile verification failed:", verify);
+      return Response.json({ success: false, error: "Verification failed", verify });
     }
 
     /* ---- Send email (MailChannels) ---- */
