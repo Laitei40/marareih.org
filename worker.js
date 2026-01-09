@@ -28,12 +28,16 @@ export default {
     /* ---- Send email (MailChannels) ---- */
     const emailPayload = {
       personalizations: [{
-        to: [{ email: "teiteipara@gmail.com" }]
+        to: [{ email: "info@marareih.org" }]
       }],
-    from: {
-    email: "info@marareih.org",
-    name: "Mara Language Preservation"
-    },
+      from: {
+        email: "info@marareih.org",
+        name: "Mara Language Preservation"
+      },
+      reply_to: {
+        email,
+        name
+      },
       subject: "New Contact Message — Mara Language Preservation",
       content: [{
         type: "text/plain",
@@ -46,14 +50,30 @@ ${message}`
       }]
     };
 
-    const mailRes = await fetch("https://api.mailchannels.net/tx/v1/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(emailPayload)
-    });
+    let mailRes;
+    let mailResult = null;
 
-    if (!mailRes.ok) {
-      return Response.json({ success: false, error: "Email failed" });
+    try {
+      mailRes = await fetch("https://api.mailchannels.net/tx/v1/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(emailPayload)
+      });
+
+      try {
+        mailResult = await mailRes.json();
+      } catch (e) {
+        mailResult = null;
+      }
+
+      if (!mailRes.ok) {
+        console.error("MailChannels failed:", mailRes.status, mailResult);
+        return Response.json({ success: false, error: "Email provider error", details: mailResult });
+      }
+
+    } catch (err) {
+      console.error("MailChannels request error:", err);
+      return Response.json({ success: false, error: "Email send error" });
     }
 
     return Response.json({ success: true });

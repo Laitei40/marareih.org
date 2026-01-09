@@ -29,35 +29,64 @@ export async function onRequestPost({ request, env }) {
     }
 
     // Send email (MailChannels)
-    await fetch("https://api.mailchannels.net/tx/v1/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        personalizations: [
-          { to: [{ email: "info@marareih.org" }] }
-        ],
-        from: {
-          email: "noreply@marareih.org",
-          name: "Mara Language Preservation"
-        },
-        reply_to: {
-          email,
-          name
-        },
-        subject: "New Contact Message — MLP",
-        content: [
-          {
-            type: "text/plain",
-            value:
+    const mailPayload = {
+      personalizations: [
+        { to: [{ email: "info@marareih.org" }] }
+      ],
+      from: {
+        email: "noreply@marareih.org",
+        name: "Mara Language Preservation"
+      },
+      reply_to: {
+        email,
+        name
+      },
+      subject: "New Contact Message — MLP",
+      content: [
+        {
+          type: "text/plain",
+          value:
 `Name: ${name}
 Email: ${email}
 
 Message:
 ${message}`
-          }
-        ]
-      })
-    });
+        }
+      ]
+    };
+
+    let mailRes;
+    let mailResult = null;
+
+    try {
+      mailRes = await fetch("https://api.mailchannels.net/tx/v1/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(mailPayload)
+      });
+
+      try {
+        mailResult = await mailRes.json();
+      } catch (e) {
+        // non-JSON response
+        mailResult = null;
+      }
+
+      if (!mailRes.ok) {
+        console.error("MailChannels failed:", mailRes.status, mailResult);
+        return new Response(
+          JSON.stringify({ success: false, error: "Email provider error", details: mailResult }),
+          { status: 502, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+    } catch (err) {
+      console.error("MailChannels request error:", err);
+      return new Response(
+        JSON.stringify({ success: false, error: "Email send error" }),
+        { status: 502, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     return new Response(
       JSON.stringify({ success: true }),
