@@ -189,6 +189,12 @@ label{font-size:.95rem;color:var(--muted);display:block;margin-bottom:var(--spac
   .container{padding:0 .75rem}
 }
 
+/* Shorten brand label on small screens to save header space while preserving accessibility */
+@media (max-width:480px){
+  .brand-text{display:none}
+  .brand::after{content:"MLP";display:inline-block;margin-left:.4rem;font-weight:800;color:var(--text);font-size:0.98rem;line-height:1;vertical-align:middle}
+}
+
 /* Small/medium screens: align switcher to the right and limit dropdown width to viewport */
 @media (max-width:720px){
   .theme-switcher{margin-left:auto;z-index:50}
@@ -198,6 +204,12 @@ label{font-size:.95rem;color:var(--muted);display:block;margin-bottom:var(--spac
 @media (max-width:480px){
   .theme-switcher{margin-left:auto;z-index:50}
   .theme-switcher select{min-width:100px;max-width:calc(100vw - 48px)}
+}
+
+/* Make the footer 'Give Feedback' CTA more compact on small screens */
+@media (max-width:640px){
+  .mlp-footer .btn{padding:.45rem .7rem;font-size:.88rem;border-radius:10px}
+  .mlp-footer .btn + .btn{margin-left:.5rem}
 }
 
 /* When the mobile nav is open, let the nav capture touches/clicks — don't block with the switcher */
@@ -222,6 +234,28 @@ label{font-size:.95rem;color:var(--muted);display:block;margin-bottom:var(--spac
 /* Subtle focus style, keyboard friendly */
 .theme-switcher:focus-within{box-shadow:0 6px 18px rgba(2,6,23,0.06);border-color:rgba(96,165,250,0.12)}
 
+/* Donate button (Buy Me a Coffee) */
+.donate-btn{display:inline-flex;align-items:center;gap:.6rem;padding:.45rem .9rem;border-radius:999px;background:linear-gradient(90deg,rgba(6,182,164,0.06),rgba(96,165,250,0.06));color:var(--text);border:1px solid rgba(2,6,23,0.06);text-decoration:none;font-weight:700;font-size:.95rem;transition:transform .16s ease,box-shadow .16s ease,background .16s ease}
+.donate-btn .donate-icon{width:18px;height:18px;display:inline-block;background-size:18px 18px;background-repeat:no-repeat;flex:0 0 18px}
+.donate-btn .donate-text{display:inline-block}
+.donate-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(2,6,23,0.06)}
+.donate-btn:focus{outline:3px solid rgba(96,165,250,0.14);outline-offset:3px}
+
+/* Gentle, calm color variant for footer */
+.donate-btn--footer{background:linear-gradient(90deg,var(--accent-2),var(--accent));color:#022;border:0}
+
+.footer-donate{display:flex;flex-direction:row;align-items:center;gap:.75rem}
+.footer-donate .donate-note{font-size:.85rem;color:var(--muted);max-width:360px}
+
+@media (max-width:720px){
+  .donate-btn{font-size:.92rem;padding:.5rem .8rem}
+  .footer-donate{flex-direction:column;align-items:flex-start}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .donate-btn, .donate-btn:hover{transition:none;transform:none}
+}
+
 /* Remove native focus ring on the select so the wrapper's focus style is used */
 .theme-switcher select:focus{outline:0;box-shadow:none}
 .theme-switcher select::-moz-focus-inner{border:0}
@@ -238,6 +272,12 @@ label{font-size:.95rem;color:var(--muted);display:block;margin-bottom:var(--spac
 /* Responsive */
 @media (max-width:900px){
   .nav-row{gap:.5rem}
+}
+/* Hide the drawer donate link on desktop — keep the standalone header donate button as the primary action.
+   Show the drawer link only on small screens (where the drawer is used). */
+.primary-nav ul li a.donate-link-drawer{display:none}
+@media (max-width:720px){
+  .primary-nav ul li a.donate-link-drawer{display:block}
 }
 @media (max-width:720px){
   /* Mobile drawer: fixed-position off-canvas navigation */
