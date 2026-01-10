@@ -105,6 +105,40 @@
   // try to inject switcher (pages without nav-row will just skip)
   document.addEventListener('DOMContentLoaded', injectThemeSwitcher);
 
+  // Header: subtle load animation and scroll elevation
+  function initHeaderEffects(){
+    try{
+      var header = document.querySelector('.site-header');
+      if (!header) return;
+
+      var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // On load, reveal header with a short fade/slide unless reduced motion
+      if (!prefersReduced) {
+        // small timeout to let initial paint finish
+        window.requestAnimationFrame(function(){
+          header.setAttribute('data-loaded','');
+        });
+      } else {
+        header.setAttribute('data-loaded','');
+      }
+
+      // Add subtle elevation when scrolling past a small threshold
+      var lastKnown = 0;
+      function onScroll(){
+        var y = window.scrollY || window.pageYOffset;
+        if (y > 8) header.classList.add('scrolled'); else header.classList.remove('scrolled');
+        lastKnown = y;
+      }
+
+      // Use passive listener for performance
+      window.addEventListener('scroll', onScroll, {passive:true});
+      // Ensure initial state is correct
+      onScroll();
+    }catch(e){console.warn('initHeaderEffects failed', e)}
+  }
+  document.addEventListener('DOMContentLoaded', initHeaderEffects);
+
 
   /* ------------------ Mobile drawer navigation ------------------ */
   (function initDrawerNav(){
