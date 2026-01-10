@@ -2,20 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MLP — Feedback</title>
-  <meta name="description" content="MLP feedback and data submission page.">
+  <meta name="description" content="Mara Language Preservation community feedback form.">
+
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/feedback.css">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 </head>
+
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
+
   <header class="site-header">
     <div class="container nav-row">
       <a class="brand" href="index.html" aria-label="Mara Language Preservation homepage">
-        <img src="assets/logo.svg" class="brand-image" width="36" height="36" alt="Mara Language Preservation logo">
-        <span class="brand-text">Mara Language Preservation</span>
+        <img src="assets/logo.svg" width="36" height="36" alt="Mara Language Preservation logo">
+        <span>Mara Language Preservation</span>
       </a>
     </div>
   </header>
@@ -23,10 +26,13 @@
   <main id="main" class="container">
     <article class="card feedback-card">
       <h1>Mara Language Preservation (MLP) Community Feedback</h1>
-      <p class="lede">Your valuable feedback helps us understand community needs and improve our efforts to preserve and promote the Mara language. All responses are confidential.</p>
+      <p class="lede">
+        Your feedback helps us improve and grow the Mara Language Preservation initiative.
+        All responses are confidential.
+      </p>
 
-      <!-- Simplified Google Form-backed fields mapped to provided `entry.*` IDs -->
-      <form id="mlp-google-form" action="https://docs.google.com/forms/d/e/1FAIpQLSd-n0zujTqMeOxypcpCRnjYqiiIvdjaTIRkjEGULoYafsK-Jg/formResponse" method="POST" target="hidden_iframe">
+      <!-- ===================== FORM ===================== -->
+      <form id="mlp-google-form" novalidate>
 
         <label for="name">Name (Optional)</label>
         <input id="name" name="entry.375119448" type="text" placeholder="Your name">
@@ -34,97 +40,110 @@
         <label for="email">Email (Optional)</label>
         <input id="email" name="entry.1555416240" type="email" placeholder="name@example.com">
 
-        <label for="country">Are you from? (Country / place - Optional)</label>
+        <label for="country">Are you from? (Optional)</label>
         <input id="country" name="entry.578966156" type="text" placeholder="Country or place">
 
         <label for="message">Your feedback</label>
-        <textarea id="message" name="entry.763811229" rows="6" required placeholder="Share your thoughts or suggestions."></textarea>
+        <textarea
+          id="message"
+          name="entry.763811229"
+          rows="6"
+          required
+          placeholder="Share your thoughts or suggestions">
+        </textarea>
 
-        <fieldset aria-label="Can we contact you about your feedback?">
-          <legend style="font-weight:600">Can we contact you about your feedback?</legend>
-          <div class="radios">
-            <label><input type="radio" name="entry.1307833837" value="Yes"> Yes</label>
-            <label><input type="radio" name="entry.1307833837" value="No"> No</label>
-          </div>
+        <fieldset>
+          <legend><strong>Can we contact you about your feedback?</strong></legend>
+          <label>
+            <input type="radio" name="entry.1307833837" value="Yes" required>
+            Yes
+          </label>
+          <label>
+            <input type="radio" name="entry.1307833837" value="No">
+            No
+          </label>
         </fieldset>
 
-        <div class="checkbox">
-          <label><input type="checkbox" name="entry.1760276680" value="Yes"> I want to hear about MLP updates via email</label>
-        </div>
+        <label class="checkbox">
+          <input type="checkbox" name="entry.1760276680" value="Yes">
+          I want to hear about MLP updates via email
+        </label>
 
         <div class="actions">
           <button type="submit" id="mlp-submit">Submit feedback</button>
-          <div id="mlp-status" aria-live="polite" class="status"></div>
+          <div id="mlp-status" class="status" aria-live="polite"></div>
         </div>
       </form>
+      <!-- =================== END FORM =================== -->
 
-      <iframe name="hidden_iframe" id="hidden_iframe" style="display:none"></iframe>
     </article>
   </main>
 
   <footer class="site-footer">
     <div class="container footer-row">
       <p>© <span id="year">2026</span> Mara Language Preservation</p>
-      <nav class="footer-nav"><a href="index.html">Home</a></nav>
+      <nav><a href="index.html">Home</a></nav>
     </div>
   </footer>
+
+  <!-- ===================== CONFIG ===================== -->
   <script>
-    (function(){
-      const form = document.getElementById('mlp-google-form');
+    // 🔴 MUST be your real Worker URL
+    window.GOOGLE_FORM_PROXY = 'https://mlp-form-proxy.teiteipara.workers.dev';
+  </script>
+
+  <!-- ===================== LOGIC ====================== -->
+  <script>
+    (function () {
+      const form   = document.getElementById('mlp-google-form');
       const status = document.getElementById('mlp-status');
       const submit = document.getElementById('mlp-submit');
 
-      async function postToProxy(url, bodyText){
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: bodyText,
-          mode: 'cors'
-        });
-        return res;
-      }
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
 
-      form.addEventListener('submit', function(ev){
-        // If browser validation fails, let it show messages
-        if (!form.checkValidity()) return;
-        ev.preventDefault();
+        if (!form.checkValidity()) {
+          form.reportValidity();
+          return;
+        }
+
+        if (!window.GOOGLE_FORM_PROXY) {
+          status.textContent = 'Submission service unavailable.';
+          return;
+        }
+
         submit.disabled = true;
-        status.textContent = 'Submitting...';
+        status.textContent = 'Submitting…';
 
-        const proxy = window.GOOGLE_FORM_PROXY;
-        if (proxy) {
-          // Collect form data and send as application/x-www-form-urlencoded to proxy
+        try {
           const fd = new FormData(form);
           const params = new URLSearchParams();
-          for (const pair of fd.entries()) params.append(pair[0], pair[1]);
-          postToProxy(proxy, params.toString())
-            .then(res => {
-              if (res.ok) {
-                status.textContent = 'Thank you for your feedback — we received it!';
-                form.reset();
-              } else {
-                status.textContent = 'Submission failed — please try again.';
-                console.error('Proxy returned', res.status, res.statusText);
-              }
-            })
-            .catch(err => {
-              status.textContent = 'Submission failed — please try again.';
-              console.error(err);
-            })
-            .finally(()=> submit.disabled = false);
+          for (const [k, v] of fd.entries()) params.append(k, v);
 
-        } else {
-          // No proxy configured: fall back to hidden iframe native submit
-          // Keep the previous behavior: submit to the existing form action via hidden iframe
-          status.textContent = 'Submitting...';
-          // remove event listener temporarily to allow native submit
-          form.removeEventListener('submit', arguments.callee);
-          form.submit();
-          // re-enable after a short delay (iframe load handler may re-enable)
-          setTimeout(()=>{ submit.disabled = false; status.textContent = 'Thank you for your feedback — we appreciate your support!'; }, 1500);
+          const res = await fetch(window.GOOGLE_FORM_PROXY, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+          });
+
+          const result = await res.json();
+
+          if (result.success) {
+            status.textContent = 'Thank you — your feedback was received!';
+            form.reset();
+          } else {
+            status.textContent = 'Submission failed. Please try again.';
+            console.error(result);
+          }
+        } catch (err) {
+          status.textContent = 'Submission failed. Please try again.';
+          console.error(err);
+        } finally {
+          submit.disabled = false;
         }
       });
     })();
   </script>
+
 </body>
 </html>
