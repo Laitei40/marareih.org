@@ -8,6 +8,7 @@
 
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/feedback.css">
+  <script defer src="js/script.js"></script>
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 </head>
 
@@ -20,6 +21,19 @@
         <img src="assets/logo.svg" width="36" height="36" alt="Mara Language Preservation logo">
         <span>Mara Language Preservation</span>
       </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="primary-navigation">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="hamburger"></span>
+      </button>
+
+      <nav id="primary-navigation" class="primary-nav">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="projects.html">Projects</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
     </div>
   </header>
 
@@ -73,10 +87,55 @@
     </article>
   </main>
 
-  <footer class="site-footer">
-    <div class="container footer-row">
-      <p>© <span id="year">2026</span> Mara Language Preservation</p>
-      <nav><a href="index.html">Home</a></nav>
+  <footer class="site-footer site-footer--mlp" role="contentinfo">
+    <div class="footer-top">
+      <div class="container footer-columns">
+        <div>
+          <h3>About MLP</h3>
+          <ul>
+            <li><a href="about.html">About Mara Language Preservation</a></li>
+            <li><a href="mission.html">Mission &amp; Vision</a></li>
+            <li><a href="community.html">Community &amp; Contributors</a></li>
+            <li><a href="community.html">Language &amp; Culture</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Resources</h3>
+          <ul>
+            <li><a href="dictionary.html">Mara Dictionary</a></li>
+            <li><a href="grammar.html">Mara Grammar</a></li>
+            <li><a href="keyboard-fonts.html">Mara Keyboard &amp; Fonts</a></li>
+            <li><a href="datasets.html">Datasets &amp; Downloads</a></li>
+            <li><a href="documentation.html">Documentation</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Projects &amp; Updates</h3>
+          <ul>
+            <li><a href="projects.html">MLP Projects</a></li>
+            <li><a href="updates.html">Change Log / Updates</a></li>
+            <li><a href="documentation.html">Digital Tools</a></li>
+            <li><a href="feedback.html">Submit Feedback</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Contact &amp; Legal</h3>
+          <ul>
+            <li><a href="contact.html">Contact Us</a></li>
+            <li><a href="privacy-policy.html">Privacy Policy</a></li>
+            <li><a href="terms-of-use.html">Terms of Use</a></li>
+            <li><a href="external-links-disclaimer.html">External Links Disclaimer</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="container footer-bottom-row">
+        <div>© 2026 Mara Language Preservation (MLP)</div>
+        <div><a href="terms-of-use.html">Terms of Use</a> | <a href="privacy-policy.html">Privacy Policy</a> | <a href="external-links-disclaimer.html">External Links Disclaimer</a></div>
+      </div>
     </div>
   </footer>
 
