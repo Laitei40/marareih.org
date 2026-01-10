@@ -42,18 +42,16 @@
         Have a question, want to collaborate, or contribute data? Reach out.
       </p>
 
-      <form id="contactForm" class="contact-form" novalidate>
-        <label for="name">Name</label>
-        <input id="name" name="name" type="text" required autocomplete="name">
-        <textarea id="message" name="message" rows="6" required></textarea>
+      <form id="contactForm" class="contact-form" method="POST" novalidate>
+        <!-- Google Form mapped fields -->
+        <label for="fullname">Full name</label>
+        <input id="fullname" name="entry.1794773739" type="text" required autocomplete="name">
 
-        <!-- Cloudflare Turnstile (Managed, invisible) -->
-        <div
-          class="cf-turnstile"
-          data-sitekey="0x4AAAAAACLWQIj9umfqaLzY"
-          data-theme="dark"
-          data-callback="onTurnstileSuccess">
-        </div>
+        <label for="message">Your message</label>
+        <textarea id="message" name="entry.76727431" rows="6" required></textarea>
+
+        <!-- Hidden iframe target keeps the user on-page after submit -->
+        <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" aria-hidden="true"></iframe>
 
         <button class="btn" type="submit">Send message</button>
 
@@ -119,13 +117,45 @@
     </div>
   </footer>
 
-  <!-- Turnstile callback (required for Managed mode) -->
+  <!-- Submission handler: post to Google Forms via hidden iframe and show status -->
   <script>
-    window.onTurnstileSuccess = function () {
-      // Token is generated and available in
-      // input[name="cf-turnstile-response"]
-      // No UI needed (Managed mode)
-    };
+    (function(){
+      const FORM_ACTION = 'https://docs.google.com/forms/d/e/1FAIpQLSdUMwfevBNtXtH1vNQffRO7AD0j0zhiT1aTl6T-FBgKiuQV8g/formResponse';
+      const form = document.getElementById('contactForm');
+      const statusEl = document.getElementById('formStatus');
+      const iframe = document.getElementById('hidden_iframe');
+
+      if (!form || !statusEl || !iframe) return;
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        // Simple client-side validation
+        const name = form.querySelector('[name="entry.1794773739"]');
+        const msg = form.querySelector('[name="entry.76727431"]');
+        if (!name || !name.value.trim()) { statusEl.textContent = 'Please enter your full name.'; name.focus(); return; }
+        if (!msg || !msg.value.trim()) { statusEl.textContent = 'Please enter a message.'; msg.focus(); return; }
+
+        statusEl.textContent = 'Submitting…';
+
+        // Prepare form for Google Form submission
+        form.action = FORM_ACTION;
+        form.method = 'POST';
+        form.target = 'hidden_iframe';
+
+        // Listen for iframe load to detect completion
+        const onload = function () {
+          statusEl.textContent = 'Thank you — your message was received.';
+          form.reset();
+          iframe.removeEventListener('load', onload);
+        };
+
+        iframe.addEventListener('load', onload);
+
+        // Submit the native form (will post to Google Forms endpoint)
+        form.submit();
+      });
+    })();
   </script>
 </body>
 </html>
