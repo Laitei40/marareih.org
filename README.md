@@ -51,4 +51,7 @@ This repository contains the source code and resources for the **Mara Language P
 ```
 ---
 
-## 🌏 Official website: marareih.org
+## 🌏 Official Website
+
+https://marareih.org
+
