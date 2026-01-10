@@ -106,31 +106,109 @@
   document.addEventListener('DOMContentLoaded', injectThemeSwitcher);
 
 
-  /* ------------------ Mobile nav toggle ------------------ */
-  const navToggle = document.querySelector('.nav-toggle');
-  const nav =
-    document.getElementById('primary-navigation') ||
-    document.querySelector('.primary-nav');
-  const navRowEl = document.querySelector('.nav-row');
+  /* ------------------ Mobile drawer navigation ------------------ */
+  (function initDrawerNav(){
+    const navToggle = document.querySelector('.nav-toggle');
+    const nav = document.getElementById('primary-navigation') || document.querySelector('.primary-nav');
+    const navRow = document.querySelector('.nav-row');
+    if (!navToggle || !nav || !navRow) return;
 
-  if (navToggle && nav) {
-    navToggle.addEventListener('click', () => {
-      const isOpen = nav.classList.toggle('open');
-      if (navRowEl) navRowEl.classList.toggle('nav-open', isOpen);
-      navToggle.setAttribute('aria-expanded', String(isOpen));
+    // Create backdrop element
+    let backdrop = document.querySelector('.mobile-backdrop');
+    if (!backdrop) {
+      backdrop = document.createElement('div');
+      backdrop.className = 'mobile-backdrop';
+      document.body.appendChild(backdrop);
+    }
+
+    // Create a close button inside nav for accessibility
+    let closeBtn = nav.querySelector('.drawer-close');
+    if (!closeBtn) {
+      closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'drawer-close';
+      closeBtn.setAttribute('aria-label','Close navigation');
+      closeBtn.innerHTML = '&times;';
+      // insert at top of nav
+      nav.insertBefore(closeBtn, nav.firstChild);
+    }
+
+    // Save original parent so we can restore nav after closing (prevents ancestor stacking context issues)
+    const originalParent = nav.parentElement;
+    const originalNext = nav.nextSibling;
+
+
+    let prevFocus = null;
+
+    function moveNavToBody(){
+      try{
+        if (nav.parentElement !== document.body) {
+          document.body.appendChild(nav);
+        }
+      }catch(e){/* ignore */}
+    }
+
+    function moveNavBack(){
+      try{
+        if (originalParent && nav.parentElement !== originalParent) {
+          if (originalNext) originalParent.insertBefore(nav, originalNext);
+          else originalParent.appendChild(nav);
+        }
+      }catch(e){/* ignore */}
+    }
+
+    function openDrawer(){
+      // move nav to body so it's not clipped by header or transformed ancestors
+      moveNavToBody();
+      prevFocus = document.activeElement;
+      nav.classList.add('open');
+      navRow.classList.add('nav-open');
+      backdrop.classList.add('show');
+      document.body.classList.add('no-scroll');
+      navToggle.setAttribute('aria-expanded','true');
+      // focus close button for keyboard users
+      closeBtn.focus();
+      // attach escape handler
+      document.addEventListener('keydown', onKeydown);
+    }
+
+    function closeDrawer(){
+      nav.classList.remove('open');
+      navRow.classList.remove('nav-open');
+      backdrop.classList.remove('show');
+      document.body.classList.remove('no-scroll');
+      navToggle.setAttribute('aria-expanded','false');
+      // restore nav to its original location so desktop layout remains consistent
+      moveNavBack();
+      // restore focus
+      try{ if (prevFocus && typeof prevFocus.focus === 'function') prevFocus.focus(); } catch(e){}
+      document.removeEventListener('keydown', onKeydown);
+    }
+
+    function onKeydown(e){
+      if (e.key === 'Escape') closeDrawer();
+    }
+
+    // Toggle handler
+    navToggle.addEventListener('click', (e) => {
+      if (nav.classList.contains('open')) closeDrawer(); else openDrawer();
     });
 
-    // Close mobile nav when a navigation link is clicked (improves tap behavior)
+    // Close when backdrop clicked
+    backdrop.addEventListener('click', closeDrawer);
+
+    // Close when close button clicked
+    closeBtn.addEventListener('click', closeDrawer);
+
+    // Close when a navigation link is tapped — allow navigation to proceed
     nav.querySelectorAll('a').forEach((link) => {
       link.addEventListener('click', () => {
-        if (nav.classList.contains('open')) {
-          nav.classList.remove('open');
-          if (navRowEl) navRowEl.classList.remove('nav-open');
-          navToggle.setAttribute('aria-expanded', 'false');
-        }
+        // small timeout to allow navigation to start, but close immediately
+        setTimeout(closeDrawer, 50);
       });
     });
-  }
+
+  })();
 
   /* ------------------ Reveal on scroll ------------------ */
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
