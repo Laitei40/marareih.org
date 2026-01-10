@@ -146,6 +146,8 @@ label{font-size:.95rem;color:var(--muted)}
   /* Fallback: if we set a `nav-open` class on the nav-row, also disable interactions */
   .nav-row.nav-open .theme-switcher{pointer-events:none}
   .nav-row.nav-open .theme-switcher *{pointer-events:none}
+  /* Stronger: hide the theme switcher entirely while mobile nav is open to avoid any stacking/overlay issues */
+  .nav-row.nav-open .theme-switcher{display:none !important}
 }
 
 /* Icon area (left) */
