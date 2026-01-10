@@ -34,7 +34,12 @@ export default {
       const googleResp = await fetch(GOOGLE_FORM_ACTION, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/x-www-form-urlencoded',
+          // Provide browser-like headers to reduce Google's automated-request blocking
+          'Referer': 'https://docs.google.com/forms/d/e/1FAIpQLSd-n0zujTqMeOxypcpCRnjYqiiIvdjaTIRkjEGULoYafsK-Jg/viewform',
+          'Origin': 'https://docs.google.com',
+          'Accept': '*/*',
+          'User-Agent': 'Mozilla/5.0 (compatible; MLP-Form-Proxy/1.0)'
         },
         body: params.toString(),
         redirect: 'follow'
