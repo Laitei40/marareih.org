@@ -164,8 +164,23 @@
       var navRow = document.querySelector('.nav-row');
       var nav = document.getElementById('primary-navigation') || document.querySelector('.primary-nav');
 
-      // Do not insert a header donate button — keep donate only in the mobile drawer
-      // This prevents duplicate primary CTAs in the header while keeping the drawer link.
+      // Create a header donate button that is visible only on small screens.
+      // We still keep the donate link inside the drawer; the header button provides
+      // quick access on mobile without adding a persistent desktop CTA.
+      if (navRow) {
+        if (!navRow.querySelector('.header-donate')) {
+          try {
+            var headerDonate = document.createElement('a');
+            headerDonate.className = 'donate-btn header-donate';
+            headerDonate.href = DONATE_PAGE;
+            headerDonate.setAttribute('aria-label','Support Mara Language Preservation — donate or learn how to support');
+            headerDonate.innerHTML = '<span class="donate-icon" aria-hidden="true"></span><span class="donate-text">Support MLP</span>';
+            var themeWrapper = navRow.querySelector('.theme-switcher');
+            if (themeWrapper && themeWrapper.parentElement) navRow.insertBefore(headerDonate, themeWrapper);
+            else navRow.appendChild(headerDonate);
+          } catch (e) { console.warn('header donate insertion failed', e); }
+        }
+      }
 
       // Ensure the donate link is present inside the mobile drawer navigation for easy access
       if (nav) {
