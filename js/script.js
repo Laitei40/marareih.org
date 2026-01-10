@@ -148,32 +148,38 @@
       var navRow = document.querySelector('.nav-row');
       var nav = document.getElementById('primary-navigation') || document.querySelector('.primary-nav');
 
-      // Create header donate button (secondary action)
+      // Create header donate button (secondary action) if one does not already exist
       if (navRow) {
+        if (navRow.querySelector('.donate-btn')) {
+          // already present, skip insertion
+        } else {
         var headerDonate = document.createElement('a');
         headerDonate.className = 'donate-btn';
         headerDonate.href = DONATE_PAGE;
         headerDonate.setAttribute('aria-label','Support Mara Language Preservation — donate or learn how to support');
         headerDonate.innerHTML = '<span class="donate-icon" aria-hidden="true"></span><span class="donate-text">Support MLP</span>';
-
         // Insert before the theme switcher if present, else append
         var themeWrapper = navRow.querySelector('.theme-switcher');
         if (themeWrapper && themeWrapper.parentElement) navRow.insertBefore(headerDonate, themeWrapper);
         else navRow.appendChild(headerDonate);
+        }
       }
 
       // Ensure the donate link is present inside the mobile drawer navigation for easy access
       if (nav) {
         var ul = nav.querySelector('ul');
         if (ul) {
-          var li = document.createElement('li');
-          var link = document.createElement('a');
-          link.href = DONATE_PAGE;
-          link.className = 'donate-link-drawer';
-          link.textContent = 'Support MLP';
-          link.setAttribute('aria-label','Support Mara Language Preservation — donate or learn how to support');
-          li.appendChild(link);
-          ul.appendChild(li);
+          // avoid adding duplicate drawer donate link
+          if (!ul.querySelector('.donate-link-drawer')) {
+            var li = document.createElement('li');
+            var link = document.createElement('a');
+            link.href = DONATE_PAGE;
+            link.className = 'donate-link-drawer';
+            link.textContent = 'Support MLP';
+            link.setAttribute('aria-label','Support Mara Language Preservation — donate or learn how to support');
+            li.appendChild(link);
+            ul.appendChild(li);
+          }
         }
       }
 
