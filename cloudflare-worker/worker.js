@@ -30,23 +30,28 @@ export default {
         'https://docs.google.com/forms/d/e/1FAIpQLSd-n0zujTqMeOxypcpCRnjYqiiIvdjaTIRkjEGULoYafsK-Jg/formResponse'
 
       // Forward submission to Google Forms
+      // Forward submission to Google and follow redirects to capture final status/body
       const googleResp = await fetch(GOOGLE_FORM_ACTION, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
         body: params.toString(),
-        redirect: 'manual' // IMPORTANT: Google returns 302 on success
+        redirect: 'follow'
       })
 
-      // Google Forms success = 302 (sometimes 200)
-      const success =
-        googleResp.status === 302 || googleResp.status === 200
+      // Read response body for debugging (may be HTML)
+      const text = await googleResp.text()
+      const truncated = text.slice(0, 1200) // keep small
+
+      // Consider 2xx as success
+      const success = googleResp.status >= 200 && googleResp.status < 300
 
       return new Response(
         JSON.stringify({
           success,
-          googleStatus: googleResp.status
+          googleStatus: googleResp.status,
+          googleBodySnippet: truncated
         }),
         {
           status: success ? 200 : 400,
