@@ -73,17 +73,56 @@
       const form = document.getElementById('mlp-google-form');
       const status = document.getElementById('mlp-status');
       const submit = document.getElementById('mlp-submit');
-      // On submit, show a friendly thank-you message while the form posts to Google
-      form.addEventListener('submit', function(){
-        // Basic HTML5 validation: if invalid, let browser show errors
+
+      async function postToProxy(url, bodyText){
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: bodyText,
+          mode: 'cors'
+        });
+        return res;
+      }
+
+      form.addEventListener('submit', function(ev){
+        // If browser validation fails, let it show messages
         if (!form.checkValidity()) return;
+        ev.preventDefault();
         submit.disabled = true;
-        status.textContent = 'Thank you for your feedback — we appreciate your support!';
-      });
-      // If iframe loads (Google replied), keep status; re-enable after short delay
-      const iframe = document.getElementById('hidden_iframe');
-      iframe.addEventListener('load', function(){
-        setTimeout(()=>{ submit.disabled = false; }, 1500);
+        status.textContent = 'Submitting...';
+
+        const proxy = window.GOOGLE_FORM_PROXY;
+        if (proxy) {
+          // Collect form data and send as application/x-www-form-urlencoded to proxy
+          const fd = new FormData(form);
+          const params = new URLSearchParams();
+          for (const pair of fd.entries()) params.append(pair[0], pair[1]);
+          postToProxy(proxy, params.toString())
+            .then(res => {
+              if (res.ok) {
+                status.textContent = 'Thank you for your feedback — we received it!';
+                form.reset();
+              } else {
+                status.textContent = 'Submission failed — please try again.';
+                console.error('Proxy returned', res.status, res.statusText);
+              }
+            })
+            .catch(err => {
+              status.textContent = 'Submission failed — please try again.';
+              console.error(err);
+            })
+            .finally(()=> submit.disabled = false);
+
+        } else {
+          // No proxy configured: fall back to hidden iframe native submit
+          // Keep the previous behavior: submit to the existing form action via hidden iframe
+          status.textContent = 'Submitting...';
+          // remove event listener temporarily to allow native submit
+          form.removeEventListener('submit', arguments.callee);
+          form.submit();
+          // re-enable after a short delay (iframe load handler may re-enable)
+          setTimeout(()=>{ submit.disabled = false; status.textContent = 'Thank you for your feedback — we appreciate your support!'; }, 1500);
+        }
       });
     })();
   </script>
