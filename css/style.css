@@ -180,7 +180,11 @@ label{font-size:.95rem;color:var(--muted);display:block;margin-bottom:var(--spac
 /* Responsive: on small screens make control comfortably tappable and fit */
 @media (max-width:480px){
   .theme-switcher{padding:.08rem;border-radius:10px}
-  .theme-switcher select{font-size:.98rem;padding:.6rem .9rem .6rem 2.6rem;min-width:120px}
+  /* On very small screens show icon-only affordance; select remains available for accessibility
+     but hidden visually to save header space. Tapping the icon cycles themes. */
+  .theme-switcher select{display:none}
+  .theme-switcher{width:38px;height:38px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+  .theme-switcher::before{left:50%;transform:translate(-50%,-50%);width:20px;height:20px}
 }
 
 /* Responsive typography adjustments */

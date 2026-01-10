@@ -91,6 +91,22 @@
     wrapper.appendChild(label);
     wrapper.appendChild(select);
 
+    // On small screens allow tapping the icon to cycle theme (icon-only affordance)
+    wrapper.addEventListener('click', (e) => {
+      try{
+        if (window.innerWidth <= 480) {
+          e.preventDefault();
+          // cycle: system -> light -> dark -> system
+          const cur = getStoredTheme() || 'system';
+          const order = ['system','light','dark'];
+          const idx = order.indexOf(cur);
+          const next = order[(idx + 1) % order.length];
+          if (next === 'system') storeTheme(null); else storeTheme(next);
+          applyThemeMode(next);
+        }
+      }catch(err){/* ignore */}
+    });
+
     // append to nav-row (right side) as last child
     navRow.appendChild(wrapper);
 
@@ -148,22 +164,8 @@
       var navRow = document.querySelector('.nav-row');
       var nav = document.getElementById('primary-navigation') || document.querySelector('.primary-nav');
 
-      // Create header donate button (secondary action) if one does not already exist
-      if (navRow) {
-        if (navRow.querySelector('.donate-btn')) {
-          // already present, skip insertion
-        } else {
-        var headerDonate = document.createElement('a');
-        headerDonate.className = 'donate-btn';
-        headerDonate.href = DONATE_PAGE;
-        headerDonate.setAttribute('aria-label','Support Mara Language Preservation — donate or learn how to support');
-        headerDonate.innerHTML = '<span class="donate-icon" aria-hidden="true"></span><span class="donate-text">Support MLP</span>';
-        // Insert before the theme switcher if present, else append
-        var themeWrapper = navRow.querySelector('.theme-switcher');
-        if (themeWrapper && themeWrapper.parentElement) navRow.insertBefore(headerDonate, themeWrapper);
-        else navRow.appendChild(headerDonate);
-        }
-      }
+      // Do not insert a header donate button — keep donate only in the mobile drawer
+      // This prevents duplicate primary CTAs in the header while keeping the drawer link.
 
       // Ensure the donate link is present inside the mobile drawer navigation for easy access
       if (nav) {
