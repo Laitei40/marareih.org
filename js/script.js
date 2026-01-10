@@ -2,15 +2,121 @@
 (function () {
   'use strict';
 
+  /* ------------------ Theme switcher ------------------ */
+  const THEME_KEY = 'mlp-theme'; // 'light' | 'dark' | 'system'
+
+  function getStoredTheme() {
+    try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; }
+  }
+
+  function storeTheme(value) {
+    try { if (value == null) localStorage.removeItem(THEME_KEY); else localStorage.setItem(THEME_KEY, value); } catch (e) { /* ignore */ }
+  }
+
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  let mqListener = null;
+
+  function applyThemeMode(mode) {
+    // mode: 'light' | 'dark' | 'system'
+    if (mode === 'system') {
+      const useDark = mq.matches;
+      document.documentElement.setAttribute('data-theme', useDark ? 'dark' : 'light');
+
+      // listen for changes
+      if (!mqListener) {
+        mqListener = (e) => document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+        if (mq.addEventListener) mq.addEventListener('change', mqListener);
+        else if (mq.addListener) mq.addListener(mqListener);
+      }
+    } else {
+      // remove system listener
+      if (mqListener) {
+        if (mq.removeEventListener) mq.removeEventListener('change', mqListener);
+        else if (mq.removeListener) mq.removeListener(mqListener);
+        mqListener = null;
+      }
+      document.documentElement.setAttribute('data-theme', mode === 'dark' ? 'dark' : 'light');
+    }
+
+    // update UI control if present
+    const sel = document.getElementById('mlp-theme-select');
+    if (sel) sel.value = mode;
+    // update wrapper attribute so CSS icon reflects active mode
+    const wrapper = document.querySelector('.theme-switcher');
+    if (wrapper) {
+      if (mode === 'system') wrapper.setAttribute('data-active-theme', 'system');
+      else wrapper.setAttribute('data-active-theme', mode === 'dark' ? 'dark' : 'light');
+    }
+  }
+
+  function initTheme() {
+    const stored = getStoredTheme();
+    const initial = stored || 'system';
+    applyThemeMode(initial);
+  }
+
+  /* Inject theme switcher into header (if present) */
+  function injectThemeSwitcher() {
+    const navRow = document.querySelector('.nav-row');
+    if (!navRow) return;
+
+    // create wrapper
+    const wrapper = document.createElement('div');
+    wrapper.className = 'theme-switcher';
+
+    const label = document.createElement('label');
+    label.setAttribute('for', 'mlp-theme-select');
+    label.textContent = '';
+    label.className = 'sr-only';
+    label.textContent = 'Theme';
+
+    const select = document.createElement('select');
+    select.id = 'mlp-theme-select';
+    select.setAttribute('aria-label', 'Select theme — Light, Dark, or System');
+
+    const optSystem = document.createElement('option'); optSystem.value = 'system'; optSystem.textContent = 'System';
+    const optLight = document.createElement('option'); optLight.value = 'light'; optLight.textContent = 'Light';
+    const optDark = document.createElement('option'); optDark.value = 'dark'; optDark.textContent = 'Dark';
+
+    select.appendChild(optSystem);
+    select.appendChild(optLight);
+    select.appendChild(optDark);
+
+    select.addEventListener('change', (e) => {
+      const v = e.target.value;
+      if (v === 'system') storeTheme(null); else storeTheme(v);
+      applyThemeMode(v);
+    });
+
+    wrapper.appendChild(label);
+    wrapper.appendChild(select);
+
+    // append to nav-row (right side) as last child
+    navRow.appendChild(wrapper);
+
+    // set control to current value and mark wrapper state for icons
+    const stored = getStoredTheme() || 'system';
+    select.value = stored;
+    wrapper.setAttribute('data-active-theme', stored);
+  }
+
+  // initialize theme and UI
+  initTheme();
+  // try to inject switcher (pages without nav-row will just skip)
+  document.addEventListener('DOMContentLoaded', injectThemeSwitcher);
+
+
   /* ------------------ Mobile nav toggle ------------------ */
   const navToggle = document.querySelector('.nav-toggle');
   const nav =
     document.getElementById('primary-navigation') ||
     document.querySelector('.primary-nav');
+  const navRowEl = document.querySelector('.nav-row');
 
   if (navToggle && nav) {
     navToggle.addEventListener('click', () => {
       const isOpen = nav.classList.toggle('open');
+      if (navRowEl) navRowEl.classList.toggle('nav-open', isOpen);
       navToggle.setAttribute('aria-expanded', String(isOpen));
     });
 
@@ -19,6 +125,7 @@
       link.addEventListener('click', () => {
         if (nav.classList.contains('open')) {
           nav.classList.remove('open');
+          if (navRowEl) navRowEl.classList.remove('nav-open');
           navToggle.setAttribute('aria-expanded', 'false');
         }
       });

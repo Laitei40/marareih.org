@@ -1,5 +1,30 @@
 /* Modern stylesheet for Mara Language Preservation */
 :root{
+  /* Theme-aware variables (light/system defaults) */
+  --transition-fast: 220ms;
+
+  /* Page colors (light by default) */
+  --bg: linear-gradient(180deg, #f6f7f9 0%, #eef2f6 100%);
+  --card: #ffffff;
+  --muted: #667085;
+  --accent: #06b6a4; /* teal */
+  --accent-2: #60a5fa; /* blue */
+  --text: #07121a;
+  --glass: rgba(2,6,23,0.04);
+
+  /* Footer colors */
+  --footer-bg: #e9f5ff;
+  --footer-bottom-bg: #dbeefc;
+
+  /* Layout */
+  --radius:12px;
+  --maxw:1100px;
+  --container-pad:1rem;
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+}
+
+/* Dark theme overrides */
+[data-theme="dark"]{
   --bg: linear-gradient(180deg, #07121a 0%, #071826 100%);
   --card:#071a22;
   --muted:#9aa4b2;
@@ -7,10 +32,8 @@
   --accent-2:#60a5fa;
   --text:#e7eef8;
   --glass: rgba(255,255,255,0.03);
-  --radius:12px;
-  --maxw:1100px;
-  --container-pad:1rem;
-  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  --footer-bg: #042b54;
+  --footer-bottom-bg: #06345f;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -22,6 +45,7 @@ body{
   -moz-osx-font-smoothing:grayscale;
   line-height:1.6;
   font-size:16px;
+  transition: background var(--transition-fast) ease, color var(--transition-fast) ease;
 }
 .container{max-width:var(--maxw);margin:0 auto;padding:0 var(--container-pad)}
 .skip-link{position:absolute;left:-999px;top:auto;width:1px;height:1px;overflow:hidden}
@@ -53,11 +77,96 @@ body{
 .card:hover{transform:translateY(-6px);box-shadow:0 12px 30px rgba(2,8,23,0.6)}
 .meta{font-size:.85rem;color:var(--muted);margin-top:.5rem}
 .site-footer{border-top:1px solid rgba(255,255,255,0.03);padding:2rem 0;margin-top:2rem;color:var(--muted)}
+
+/* Full-width institutional footer */
+.site-footer--mlp{background:var(--footer-bg);color:var(--text);padding-top:2.25rem;padding-bottom:0;margin-top:2.5rem}
+.site-footer--mlp a{color:var(--accent-2);text-decoration:none}
+.site-footer--mlp a:hover{color:var(--accent);text-decoration:underline}
+.site-footer--mlp .footer-top{padding:2rem 0}
+.site-footer--mlp .footer-columns{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem}
+.site-footer--mlp h3{margin:0 0 .5rem;color:var(--text);font-size:1.05rem}
+.site-footer--mlp ul{list-style:none;padding:0;margin:0}
+.site-footer--mlp li{margin:.45rem 0;color:var(--muted)}
+.site-footer--mlp .footer-bottom{background:var(--footer-bottom-bg);padding:.9rem 0;margin-top:1.5rem}
+.site-footer--mlp .footer-bottom-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;font-size:.95rem}
+.site-footer--mlp .footer-bottom-row a{color:var(--muted);margin-left:.6rem}
+
+@media (max-width:900px){
+  .site-footer--mlp .footer-columns{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:640px){
+  .site-footer--mlp .footer-columns{grid-template-columns:1fr;}
+  .site-footer--mlp .footer-bottom-row{flex-direction:column;align-items:flex-start}
+}
 .contact-form{display:grid;gap:.6rem;max-width:640px}
-input,textarea{padding:.75rem;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)}
+input,textarea{padding:.75rem;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:transparent;color:var(--text)}
 label{font-size:.95rem;color:var(--muted)}
 .alt{color:var(--muted)}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Dark theme input border */
+[data-theme="dark"] input,[data-theme="dark"] textarea{border:1px solid rgba(255,255,255,0.04)}
+
+/* Theme switcher control */
+
+.theme-switcher{display:flex;align-items:center;gap:.5rem}
+/* Use a subtle "glass" surface for the wrapper so the trigger (select) reads as a distinct panel */
+.theme-switcher{position:relative;align-items:center;gap:.5rem;padding:.12rem;border-radius:10px;border:1px solid rgba(2,6,23,0.06);background:var(--glass);box-shadow:0 6px 18px rgba(2,6,23,0.03);transition:box-shadow 160ms ease,border-color 160ms ease}
+
+.theme-switcher .label{display:none}
+/* Make the select visually distinct from the wrapper so trigger vs panel is clearer */
+.theme-switcher select{appearance:none;-webkit-appearance:none;background:var(--card);border:0;padding:.45rem .9rem .45rem 2.6rem;border-radius:8px;color:var(--text);width:100%;min-width:8.8rem;font-size:.95rem;font-weight:600;letter-spacing:0.2px;box-shadow:inset 0 -1px 0 rgba(2,6,23,0.02);display:block}
+/* ensure padding is included in width calculations */
+.theme-switcher select{box-sizing:border-box}
+
+/* Ensure native option panels match theme card color for contrast */
+.theme-switcher select option{background:var(--card);color:var(--text)}
+
+/* Responsive: on small screens make control comfortably tappable and fit */
+@media (max-width:480px){
+  .theme-switcher{padding:.08rem;border-radius:10px}
+  .theme-switcher select{font-size:.98rem;padding:.6rem .9rem .6rem 2.6rem;min-width:120px}
+}
+
+/* Small/medium screens: align switcher to the right and limit dropdown width to viewport */
+@media (max-width:720px){
+  .theme-switcher{margin-left:auto;z-index:50}
+  .theme-switcher select{min-width:120px;max-width:220px}
+}
+
+@media (max-width:480px){
+  .theme-switcher{margin-left:auto;z-index:50}
+  .theme-switcher select{min-width:100px;max-width:calc(100vw - 48px)}
+}
+
+/* When the mobile nav is open, let the nav capture touches/clicks — don't block with the switcher */
+@media (max-width:720px){
+  .primary-nav.open ~ .theme-switcher{pointer-events:none}
+  .primary-nav.open ~ .theme-switcher *{pointer-events:none}
+  /* Fallback: if we set a `nav-open` class on the nav-row, also disable interactions */
+  .nav-row.nav-open .theme-switcher{pointer-events:none}
+  .nav-row.nav-open .theme-switcher *{pointer-events:none}
+}
+
+/* Icon area (left) */
+.theme-switcher::before{content:'';position:absolute;left:10px;top:50%;transform:translateY(-50%);display:block;width:18px;height:18px;background-size:18px 18px;background-repeat:no-repeat;opacity:0.95;pointer-events:none}
+
+/* Icon variants based on active theme data attribute on wrapper */
+.theme-switcher[data-active-theme="light"]::before{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23062E2A'><path d='M6.76 4.84l-1.8-1.79L3.17 4.84l1.79 1.79 1.8-1.79zM1 13h3v-2H1v2zm10-9h2V1h-2v3zm7.03 1.05l1.79-1.79-1.79-1.79-1.79 1.79 1.79 1.79zM17 13h3v-2h-3v2zM6.76 19.16l-1.79 1.79 1.79 1.79 1.79-1.79-1.79-1.79zM12 20a8 8 0 1 1 0-16 8 8 0 0 1 0 16z'/></svg>")}
+.theme-switcher[data-active-theme="dark"]::before{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23CDE6FF'><path d='M21.64 13.04A9 9 0 1 1 10.96 2.36 7 7 0 0 0 21.64 13.04z'/></svg>")}
+.theme-switcher[data-active-theme="system"]::before{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23062E2A'><path d='M12 3a1 1 0 0 1 1 1v2a1 1 0 0 1-2 0V4a1 1 0 0 1 1-1zm6.36 2.64a1 1 0 0 1 1.41 0l1.42 1.42a1 1 0 0 1-1.41 1.41L18.36 7.05a1 1 0 0 1 0-1.41zM21 11h-2a1 1 0 0 1 0-2h2a1 1 0 0 1 0 2zM4 11H2a1 1 0 0 0 0 2h2a1 1 0 0 0 0-2zm1.05-6.36L3.63 6.05A1 1 0 1 0 5.05 7.47L6.47 6.05A1 1 0 0 0 5.05 4.64zM12 19a1 1 0 0 1 1 1v2a1 1 0 0 1-2 0v-2a1 1 0 0 1 1-1zM6.34 17.66a1 1 0 0 0-1.41 1.41l1.42 1.42a1 1 0 0 0 1.41-1.41L6.34 17.66zM18.36 17.66l1.42 1.42a1 1 0 0 0 1.41-1.41l-1.42-1.42a1 1 0 0 0-1.41 1.41zM12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z'/></svg>")}
+
+/* Subtle focus style, keyboard friendly */
+.theme-switcher:focus-within{box-shadow:0 6px 18px rgba(2,6,23,0.06);border-color:rgba(96,165,250,0.12)}
+
+/* Remove native focus ring on the select so the wrapper's focus style is used */
+.theme-switcher select:focus{outline:0;box-shadow:none}
+.theme-switcher select::-moz-focus-inner{border:0}
+.theme-switcher select::-ms-expand{display:none}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .theme-switcher{border-color:rgba(255,255,255,0.06);background:var(--glass);box-shadow:0 6px 18px rgba(2,6,23,0.12)}
+[data-theme="dark"] .theme-switcher select{color:var(--text);background:var(--card);box-shadow:inset 0 -1px 0 rgba(255,255,255,0.01)}
 
 /* Animations */
 [data-anim]{opacity:0;transform:translateY(12px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.85,.32,1)}
