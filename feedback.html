@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MLP — Feedback</title>
+  <meta name="description" content="MLP feedback and data submission page.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/feedback.css">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container nav-row">
+      <a class="brand" href="index.html" aria-label="Mara Language Preservation homepage">
+        <img src="assets/logo.svg" class="brand-image" width="36" height="36" alt="Mara Language Preservation logo">
+        <span class="brand-text">Mara Language Preservation</span>
+      </a>
+    </div>
+  </header>
+
+  <main id="main" class="container">
+    <article class="card feedback-card">
+      <h1>Mara Language Preservation (MLP) Community Feedback</h1>
+      <p class="lede">Your valuable feedback helps us understand community needs and improve our efforts to preserve and promote the Mara language. All responses are confidential.</p>
+
+      <!-- Simplified Google Form-backed fields mapped to provided `entry.*` IDs -->
+      <form id="mlp-google-form" action="https://docs.google.com/forms/d/e/1FAIpQLSd-n0zujTqMeOxypcpCRnjYqiiIvdjaTIRkjEGULoYafsK-Jg/formResponse" method="POST" target="hidden_iframe">
+
+        <label for="name">Name (Optional)</label>
+        <input id="name" name="entry.375119448" type="text" placeholder="Your name">
+
+        <label for="email">Email (Optional)</label>
+        <input id="email" name="entry.1555416240" type="email" placeholder="name@example.com">
+
+        <label for="country">Are you from? (Country / place - Optional)</label>
+        <input id="country" name="entry.578966156" type="text" placeholder="Country or place">
+
+        <label for="message">Your feedback</label>
+        <textarea id="message" name="entry.763811229" rows="6" required placeholder="Share your thoughts or suggestions."></textarea>
+
+        <fieldset aria-label="Can we contact you about your feedback?">
+          <legend style="font-weight:600">Can we contact you about your feedback?</legend>
+          <div class="radios">
+            <label><input type="radio" name="entry.1307833837" value="Yes"> Yes</label>
+            <label><input type="radio" name="entry.1307833837" value="No"> No</label>
+          </div>
+        </fieldset>
+
+        <div class="checkbox">
+          <label><input type="checkbox" name="entry.1760276680" value="Yes"> I want to hear about MLP updates via email</label>
+        </div>
+
+        <div class="actions">
+          <button type="submit" id="mlp-submit">Submit feedback</button>
+          <div id="mlp-status" aria-live="polite" class="status"></div>
+        </div>
+      </form>
+
+      <iframe name="hidden_iframe" id="hidden_iframe" style="display:none"></iframe>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-row">
+      <p>© <span id="year">2026</span> Mara Language Preservation</p>
+      <nav class="footer-nav"><a href="index.html">Home</a></nav>
+    </div>
+  </footer>
+  <script>
+    (function(){
+      const form = document.getElementById('mlp-google-form');
+      const status = document.getElementById('mlp-status');
+      const submit = document.getElementById('mlp-submit');
+      // On submit, show a friendly thank-you message while the form posts to Google
+      form.addEventListener('submit', function(){
+        // Basic HTML5 validation: if invalid, let browser show errors
+        if (!form.checkValidity()) return;
+        submit.disabled = true;
+        status.textContent = 'Thank you for your feedback — we appreciate your support!';
+      });
+      // If iframe loads (Google replied), keep status; re-enable after short delay
+      const iframe = document.getElementById('hidden_iframe');
+      iframe.addEventListener('load', function(){
+        setTimeout(()=>{ submit.disabled = false; }, 1500);
+      });
+    })();
+  </script>
+</body>
+</html>

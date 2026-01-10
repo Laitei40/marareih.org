@@ -1,0 +1,60 @@
+/* Clean, professional feedback form styles */
+.feedback-card{max-width:800px;margin:2.5rem auto;padding:2rem;background:#ffffff;border:1px solid #e9e9ef;border-radius:10px;box-shadow:0 6px 20px rgba(18,24,37,0.06);color: #0b2545}
+.feedback-card h1{margin:0 0 .5rem;font-size:1.5rem;color: #0b2545}
+.feedback-card .lede{margin:0 0 1rem;color:#475569}
+.feedback-card label{display:block;margin-top:1rem;font-weight:600;color:#0b2545}
+.feedback-card input[type="text"], .feedback-card input[type="email"], .feedback-card input[type="tel"], .feedback-card select, .feedback-card textarea{width:100%;padding:.65rem;border:1px solid #d1d5db;border-radius:8px;margin-top:.35rem;font-size:1rem;color:#0b2545;background:#ffffff}
+
+/* Keep radios and checkboxes inline and compact */
+.feedback-card input[type="radio"], .feedback-card input[type="checkbox"]{width:auto;padding:0;margin:0 .5rem 0 0;opacity:1;position:static}
+.feedback-card .actions{display:flex;align-items:center;gap:.75rem;margin-top:1rem}
+.feedback-card button{background:#0b2545;color:#fff;border:0;padding:.6rem .9rem;border-radius:8px;cursor:pointer;font-weight:600}
+.feedback-card .status{color:#0b2545;font-weight:600}
+
+/* Custom choice controls (Google-like) */
+.choice{display:inline-flex;align-items:center;gap:.6rem;margin:.45rem .6rem .45rem 0;cursor:pointer;position:relative}
+.choice input{position:absolute;opacity:0;pointer-events:auto;margin:0}
+.choice .choice-label{position:relative;padding-left:32px;line-height:1.1;display:inline-block;font-weight:600;color:#0b2545}
+.choice .choice-label::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:6px;border:1.6px solid #94a3b8;background:#fff;box-sizing:border-box}
+.choice input[type="radio"] + .choice-label::before{border-radius:50%;width:18px;height:18px}
+.choice input[type="checkbox"] + .choice-label::before{border-radius:6px}
+.choice input:checked + .choice-label::before{background:#0b2545;border-color:#0b2545}
+.choice input[type="checkbox"]:checked + .choice-label::before{background-color:#0b2545;background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M4 12l4 4L20 6"/></svg>');background-repeat:no-repeat;background-position:center}
+.choice input[type="radio"]:checked + .choice-label::before{box-shadow:inset 0 0 0 5px #fff}
+.choice input:focus + .choice-label::before{outline:3px solid rgba(11,37,69,0.12);outline-offset:2px}
+
+/* Scale controls layout */
+.scale-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(44px,1fr));gap:8px;align-items:center;margin:0.5rem 0}
+.scale-options .choice{justify-content:center;padding:.2rem .25rem;width:100%;border-radius:8px;border:1px solid transparent}
+.scale-options .choice input:checked + .choice-label{color:#fff}
+.scale-options .choice input:checked + .choice-label::before{background:#0b2545}
+
+/* Likert grid (radio matrix) for rating rows */
+.likert-grid { margin: 0.5rem 0 1rem 0; }
+.likert-header, .likert-row { display: grid; grid-template-columns: 2fr repeat(4, 1fr); align-items: center; gap: 0.5rem; }
+.likert-header { font-weight: 600; color: #334; padding: 0.25rem 0.5rem; }
+.likert-row { background: #f7f7fb; padding: 0.5rem; border-radius: 8px; }
+.likert-label { padding: 0.25rem 0.5rem; }
+.likert-row .choice { justify-self: center; }
+.likert-row + .likert-row { margin-top: 0.5rem; }
+
+/* Select styling (dropdown) */
+.feedback-card select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%, #0b2545 50%),linear-gradient(135deg,#0b2545 50%,transparent 50%);background-position:calc(100% - 18px) calc(50% - 3px),calc(100% - 13px) calc(50% - 3px);background-size:6px 6px,6px 6px;background-repeat:no-repeat;padding-right:2.2rem}
+
+/* Make choice controls larger on touch devices */
+@media (max-width:640px){
+  .choice{padding:.5rem .2rem}
+  .choice .choice-label{padding-left:36px;font-size:1rem}
+  .choice .choice-label::before{width:22px;height:22px}
+}
+
+/* Ensure fieldset/legend and inline labels inside the card are readable */
+.feedback-card fieldset{border:0;padding:0;margin:0}
+.feedback-card legend{font-weight:700;margin-top:1rem;color:#0b2545}
+.feedback-card .scale-options label, .feedback-card fieldset label{color:#0b2545;font-weight:500;display:inline-block;margin-right:.6rem}
+.required{color:#b00020}
+.small.muted{color:#6b7280;font-size:.9rem;margin-top:1rem}
+@media (max-width:640px){
+  .feedback-card{margin:1rem;padding:1rem}
+  .feedback-card .actions{flex-direction:column;align-items:stretch}
+}

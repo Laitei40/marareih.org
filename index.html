@@ -10,6 +10,65 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <script defer src="js/script.js"></script>
+    <script>
+    // Client-side handler: validation, submit to hidden iframe, show messages
+    (function(){
+      const form = document.getElementById('mlp-google-form');
+      if (!form) return;
+      const statusEl = document.getElementById('mlp-status');
+      const iframe = document.getElementById('hidden_iframe');
+
+      let awaiting = false;
+
+      function showStatus(msg, isError){
+        statusEl.textContent = msg;
+        statusEl.style.color = isError? '#b00020' : '#2b6cb0';
+      }
+
+      function validate(){
+        const name = document.getElementById('fullname');
+        const email = document.getElementById('email');
+        if(!name.value.trim()){ showStatus('Please enter your full name.', true); name.focus(); return false; }
+        if(!email.value.trim()){ showStatus('Please enter your email.', true); email.focus(); return false; }
+        // basic email pattern
+        const emailPat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if(!emailPat.test(email.value)){ showStatus('Please enter a valid email address.', true); email.focus(); return false; }
+        return true;
+      }
+
+      // Listen for form submit
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        if (awaiting) return; // prevent double submits
+        showStatus('Validating...');
+        if(!validate()) return;
+
+        // Submit the HTML form to the Google Form endpoint inside the hidden iframe.
+        // This keeps the user on the same page and avoids CORS problems.
+        awaiting = true;
+        showStatus('Submitting...');
+        // Set a timeout in case something goes wrong
+        const failTimeout = setTimeout(function(){
+          if(awaiting){ awaiting=false; showStatus('Submission timed out — please try again.', true); }
+        }, 12000);
+
+        // When the iframe loads, treat it as success (Google typically returns a success/redirect inside the iframe)
+        const onload = function(){
+          clearTimeout(failTimeout);
+          awaiting = false;
+          showStatus('Thank you — your submission was received.');
+          form.reset();
+          // remove listener so repeated submits still work
+          iframe.removeEventListener('load', onload);
+        };
+
+        iframe.addEventListener('load', onload);
+
+        // Now submit the form (will post to the action URL and target the hidden iframe)
+        form.submit();
+      });
+    })();
+    </script>
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 </head>
 <body>
@@ -67,6 +126,19 @@
       </div>
     </section>
   </main>
+
+    <!-- Footer CTA: link to separate feedback page -->
+    <footer class="mlp-footer">
+      <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
+        <div>
+          <strong>Have feedback or data to share?</strong>
+          <div>Send us a short submission via the MLP feedback page.</div>
+        </div>
+        <div>
+          <a class="btn" href="feedback.html">Give Feedback</a>
+        </div>
+      </div>
+    </footer>
 
   <footer class="site-footer">
     <div class="container footer-row">
