@@ -1,44 +1,81 @@
-addEventListener('fetch', event => {
-  event.respondWith(handle(event.request))
-})
+export default {
+  async fetch(request) {
+    // Handle CORS preflight
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders()
+      })
+    }
 
-async function handle(request) {
-  if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: corsHeaders()
-    })
-  }
+    // Only allow POST
+    if (request.method !== 'POST') {
+      return new Response('Method Not Allowed', {
+        status: 405,
+        headers: corsHeaders()
+      })
+    }
 
-  if (request.method !== 'POST') {
-    return new Response('Method Not Allowed', { status: 405, headers: corsHeaders() })
-  }
+    try {
+      // Read form data from browser
+      const formData = await request.formData()
+      const params = new URLSearchParams()
 
-  try {
-    const form = await request.formData()
-    const params = new URLSearchParams()
-    for (const [k, v] of form.entries()) params.append(k, v)
+      for (const [key, value] of formData.entries()) {
+        params.append(key, value)
+      }
 
-    // Replace FORM_ID below with your Google Form's ID
-    const GOOGLE_FORM_ACTION = 'https://docs.google.com/forms/d/e/1FAIpQLSd-n0zujTqMeOxypcpCRnjYqiiIvdjaTIRkjEGULoYafsK-Jg/formResponse'
+      // 🔴 YOUR GOOGLE FORM formResponse URL (CORRECT)
+      const GOOGLE_FORM_ACTION =
+        'https://docs.google.com/forms/d/e/1FAIpQLSd-n0zujTqMeOxypcpCRnjYqiiIvdjaTIRkjEGULoYafsK-Jg/formResponse'
 
-    const resp = await fetch(GOOGLE_FORM_ACTION, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString()
-    })
+      // Forward submission to Google Forms
+      const googleResp = await fetch(GOOGLE_FORM_ACTION, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: params.toString(),
+        redirect: 'manual' // IMPORTANT: Google returns 302 on success
+      })
 
-    // Return a simple JSON result back to the browser
-    return new Response(JSON.stringify({ status: resp.status }), {
-      status: 200,
-      headers: Object.assign({ 'Content-Type': 'application/json' }, corsHeaders())
-    })
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: Object.assign({ 'Content-Type': 'application/json' }, corsHeaders()) })
+      // Google Forms success = 302 (sometimes 200)
+      const success =
+        googleResp.status === 302 || googleResp.status === 200
+
+      return new Response(
+        JSON.stringify({
+          success,
+          googleStatus: googleResp.status
+        }),
+        {
+          status: success ? 200 : 400,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders()
+          }
+        }
+      )
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: error.message
+        }),
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders()
+          }
+        }
+      )
+    }
   }
 }
 
-function corsHeaders(){
+// CORS headers
+function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
