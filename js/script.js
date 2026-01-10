@@ -331,3 +331,48 @@
     }
   });
 })();
+
+/* ------------------ Cookie consent banner ------------------ */
+(function cookieConsent(){
+  try{
+    var CONSENT_KEY = 'mlp-consent';
+    if (localStorage.getItem(CONSENT_KEY) === 'accepted') return;
+
+    // create banner
+    var banner = document.createElement('div');
+    banner.className = 'cookie-consent-banner';
+    banner.setAttribute('role','region');
+    banner.setAttribute('aria-label','Cookie consent');
+
+    var inner = document.createElement('div');
+    inner.className = 'inner container';
+
+    var msg = document.createElement('p');
+    msg.innerHTML = 'This website uses cookies or local storage to remember your preferences and improve your experience. <a href="privacy-policy.html">Privacy policy</a>';
+
+    var btn = document.createElement('button');
+    btn.className = 'btn-accept';
+    btn.type = 'button';
+    btn.textContent = 'Accept';
+    btn.setAttribute('aria-label','Accept cookies');
+
+    inner.appendChild(msg);
+    inner.appendChild(btn);
+    banner.appendChild(inner);
+    document.body.appendChild(banner);
+
+    // focus accept for keyboard users
+    btn.focus();
+
+    function accept(){
+      try{ localStorage.setItem(CONSENT_KEY,'accepted'); }catch(e){}
+      // remove banner
+      if (banner && banner.parentNode) banner.parentNode.removeChild(banner);
+    }
+
+    btn.addEventListener('click', accept, { once: true });
+
+    // allow keyboard Enter/Space on the button
+    btn.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); accept(); } });
+  }catch(e){ console.warn('cookieConsent failed', e); }
+})();
