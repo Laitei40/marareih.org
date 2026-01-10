@@ -104,6 +104,7 @@
   initTheme();
   // try to inject switcher (pages without nav-row will just skip)
   document.addEventListener('DOMContentLoaded', injectThemeSwitcher);
+  document.addEventListener('DOMContentLoaded', injectDonateControls);
 
   // Header: subtle load animation and scroll elevation
   function initHeaderEffects(){
@@ -138,6 +139,47 @@
     }catch(e){console.warn('initHeaderEffects failed', e)}
   }
   document.addEventListener('DOMContentLoaded', initHeaderEffects);
+
+  /* ------------------ Donate (Buy Me a Coffee) injector ------------------ */
+  function injectDonateControls(){
+    try{
+      var DONATE_PAGE = 'donate.html'; // local donate info page
+      var DONATE_URL = 'https://www.buymeacoffee.com/mlp'; // external Buy Me a Coffee page
+      var navRow = document.querySelector('.nav-row');
+      var nav = document.getElementById('primary-navigation') || document.querySelector('.primary-nav');
+
+      // Create header donate button (secondary action)
+      if (navRow) {
+        var headerDonate = document.createElement('a');
+        headerDonate.className = 'donate-btn';
+        headerDonate.href = DONATE_PAGE;
+        headerDonate.setAttribute('aria-label','Support Mara Language Preservation — donate or learn how to support');
+        headerDonate.innerHTML = '<span class="donate-icon" aria-hidden="true"></span><span class="donate-text">Support MLP</span>';
+
+        // Insert before the theme switcher if present, else append
+        var themeWrapper = navRow.querySelector('.theme-switcher');
+        if (themeWrapper && themeWrapper.parentElement) navRow.insertBefore(headerDonate, themeWrapper);
+        else navRow.appendChild(headerDonate);
+      }
+
+      // Ensure the donate link is present inside the mobile drawer navigation for easy access
+      if (nav) {
+        var ul = nav.querySelector('ul');
+        if (ul) {
+          var li = document.createElement('li');
+          var link = document.createElement('a');
+          link.href = DONATE_PAGE;
+          link.className = 'donate-link-drawer';
+          link.textContent = 'Support MLP';
+          link.setAttribute('aria-label','Support Mara Language Preservation — donate or learn how to support');
+          li.appendChild(link);
+          ul.appendChild(li);
+        }
+      }
+
+      // NOTE: footer donate element intentionally omitted — use dedicated donate page instead
+    }catch(e){ console.warn('injectDonateControls failed', e); }
+  }
 
 
   /* ------------------ Mobile drawer navigation ------------------ */
