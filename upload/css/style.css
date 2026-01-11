@@ -1,51 +1,70 @@
-/* Local upload page adjustments. This file intentionally keeps tokens light and
-   defers to the site-level variables in ../css/style.css when available. */
+/* Uploader page styles
+   Minimal, accessible, and responsive. Uses site tokens from ../css/style.css when available.
+*/
 
 :root{
-  --upload-gap: 1rem;
-  --dropzone-radius: 12px;
+  --u-maxw:900px;
+  --u-pad:1rem;
+  --u-radius:12px;
+  --u-gap:1rem;
 }
 
-html,body{height:100%}
-body{margin:0;padding:2rem;background:var(--bg, #fff);color:var(--text, #07121a);font-family:var(--font-family-base, Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial);-webkit-font-smoothing:antialiased}
-.container{max-width:900px;margin:0 auto}
+html,body{height:100%;}
+body{margin:0;font-family:var(--font-family-base, Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;background:var(--bg,#f6f7f9);color:var(--text,#07121a);padding:2rem}
 
-.card{background:var(--card,#fff);border-radius:var(--radius,12px);padding:1.25rem;box-shadow:0 8px 28px rgba(2,6,23,0.06)}
-h1{font-size:var(--h2,1.5rem);color:var(--text)}
-.lead{color:var(--muted);margin-bottom:0.75rem}
+.uploader-shell{max-width:var(--u-maxw);margin:0 auto}
+.uploader-header{display:flex;align-items:center;gap:1rem;margin-bottom:1rem}
+.logo-link{display:flex;align-items:center;text-decoration:none}
+.mlp-logo{width:56px;height:auto;display:block}
+.header-text{flex:1}
+.title{font-size:1.25rem;margin:0;color:var(--text)}
+.subtitle{margin:0;color:var(--muted)}
 
-.uploader-wrapper{margin-top:0.5rem}
-.dropzone{display:block;border:2px dashed rgba(6,6,6,0.06);padding:1rem;border-radius:var(--dropzone-radius);background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);cursor:pointer;outline:0}
-.dropzone:focus{box-shadow:0 8px 20px rgba(96,165,250,0.12);border-color:rgba(96,165,250,0.24)}
-.dropzone-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;padding:.75rem;text-align:center;color:var(--muted)}
-.dropzone svg{color:var(--accent-2, #60a5fa)}
-.link-btn{background:none;border:0;color:var(--accent-2);text-decoration:underline;cursor:pointer;padding:0;font:inherit}
+.card{background:var(--card,#fff);border-radius:var(--u-radius);padding:1.25rem;box-shadow:0 8px 30px rgba(2,6,23,0.06)}
 
-input[type=file]{display:none}
+.dropzone{border:2px dashed rgba(2,6,23,0.06);border-radius:10px;padding:1.25rem;display:flex;align-items:center;justify-content:center;cursor:pointer;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);transition:box-shadow .18s ease,transform .12s ease}
+.dropzone:focus{outline:none;box-shadow:0 10px 30px rgba(96,165,250,0.12)}
+.dropzone:hover{transform:translateY(-2px)}
+.dropzone-visual{text-align:center}
+.drop-icon{color:var(--accent-2,#60a5fa);opacity:.95}
+.drop-main{font-weight:700;margin:.5rem 0 0}
+.drop-sub{margin:0;color:var(--muted)}
+.btn-link{background:none;border:0;color:var(--accent-2);text-decoration:underline;cursor:pointer;padding:0;font:inherit}
+.visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
+
+.drop-hint{margin-top:.5rem;color:var(--muted);font-size:.95rem}
 
 .file-list{margin-top:1rem;display:flex;flex-direction:column;gap:.5rem}
-.file-item{display:flex;align-items:center;gap:.75rem;padding:.6rem;border-radius:8px;background:rgba(2,6,23,0.02);justify-content:space-between}
-.file-meta{display:flex;gap:0.75rem;align-items:center}
+.file-row{display:flex;align-items:center;gap:.75rem;padding:.6rem;border-radius:8px;background:rgba(2,6,23,0.02);justify-content:space-between}
+.file-meta{display:flex;gap:.75rem;align-items:center}
 .file-name{font-weight:600}
 .file-size{color:var(--muted);font-size:.95rem}
-.file-remove{background:transparent;border:0;color:var(--muted);cursor:pointer;padding:.4rem;border-radius:6px}
-.file-remove:focus{outline:3px solid rgba(96,165,250,0.14)}
+.btn-file-remove{background:transparent;border:0;color:var(--muted);cursor:pointer;padding:.35rem;border-radius:6px}
+.btn-file-remove:focus{outline:3px solid rgba(96,165,250,0.14)}
 
-.contact-form{margin-top:.75rem;display:grid;gap:.6rem}
-.contact-form input,.contact-form textarea,.contact-form select{padding:.6rem;border-radius:8px;border:1px solid rgba(2,6,23,0.06);background:transparent;color:var(--text);font-size:1rem}
-label{font-size:.95rem;color:var(--muted);display:block;margin-bottom:.25rem}
+.meta-row{display:flex;align-items:center;gap:1rem;margin-top:1rem}
+.meta-note{color:var(--muted);flex:1}
+.actions{display:flex;gap:.5rem}
+.btn{padding:.55rem .9rem;border-radius:10px;border:0;font-weight:700;cursor:pointer}
+.btn.primary{background:linear-gradient(90deg,var(--accent,#06b6a4),var(--accent-2,#60a5fa));color:#022}
+.btn.ghost{background:transparent;border:1px solid rgba(2,6,23,0.06);color:var(--text)}
+.btn[disabled]{opacity:.55;cursor:default}
 
-.actions .btn{padding:.6rem 1rem;border-radius:10rem;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#022;border:0;cursor:pointer}
-.actions .btn:disabled{opacity:.5;cursor:default}
+.progress-wrap{margin-top:1rem;display:flex;align-items:center;gap:.75rem}
+.progress-bar{flex:1;height:12px;background:rgba(2,6,23,0.04);border-radius:999px;overflow:hidden}
+.progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent,#06b6a4),var(--accent-2,#60a5fa));transition:width 360ms cubic-bezier(.2,.9,.3,1)}
+.progress-info{font-size:.95rem;color:var(--muted)}
 
-.progress-wrap{display:flex;align-items:center;gap:.5rem}
-progress{width:200px;height:10px;border-radius:6px;overflow:hidden}
+.status-message{margin-top:.75rem;font-size:.98rem}
+.status-message.success{color:var(--accent)}
+.status-message.error{color:#c92a2a}
 
 .muted{color:var(--muted)}
-.small{font-size:.92rem}
-.alt{color:var(--muted)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 @media (max-width:640px){
   body{padding:1rem}
-  progress{width:120px}
+  .uploader-header{flex-direction:column;align-items:center;text-align:center;gap:.5rem}
+  .header-text{order:2}
+  .mlp-logo{width:48px}
 }

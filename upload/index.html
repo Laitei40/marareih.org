@@ -4,75 +4,57 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>upload.marareih.org — Upload</title>
+  <link rel="icon" href="/assets/favicon.ico">
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <main class="container" id="main">
-    <header class="site-header" data-loaded>
-      <div class="nav-row">
-        <a href="/" class="brand">
-          <img src="/assets/logo.svg" alt="Mara Language Preservation" class="brand-image" aria-hidden>
-          <span class="brand-text">Mara Language Preservation</span>
-        </a>
+  <main class="uploader-shell" id="main">
+    <header class="uploader-header">
+      <a href="/" class="logo-link" aria-label="Mara Language Preservation home">
+        <img src="/assets/logo.svg" alt="Mara Language Preservation" class="mlp-logo">
+      </a>
+      <div class="header-text">
+        <h1 class="title">MLP Secure Upload</h1>
+        <p class="subtitle">Contribute language data (audio, text, datasets). Files are protected and handled respectfully.</p>
       </div>
     </header>
 
-    <section aria-labelledby="upload-title" class="content" data-anim>
-      <div class="cards">
-        <div class="card">
-          <h1 id="upload-title">Upload Files to Mara Language Preservation</h1>
-          <p class="lead">Share documents, audio, datasets, or other resources that support Mara language preservation. Please do not upload private or sensitive personal information without consent.</p>
+    <section class="upload-area" aria-labelledby="uploader-heading">
+      <div class="card">
+        <h2 id="uploader-heading" class="sr-only">Upload files to MLP</h2>
 
-          <form class="upload-form" id="uploadForm" novalidate>
-            <div class="uploader-wrapper">
-              <label id="dropzoneLabel" for="fileInput" class="dropzone" tabindex="0" aria-describedby="dropzone-help">
-                <div class="dropzone-inner">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" aria-hidden focusable="false"><path d="M12 3v9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 10l5-7 5 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  <strong>Drag & drop files here</strong>
-                  <span class="muted">or <button type="button" class="link-btn" id="browseBtn">choose files</button></span>
-                </div>
-                <input id="fileInput" name="files" type="file" multiple aria-labelledby="dropzoneLabel" aria-describedby="dropzone-help" />
-              </label>
-              <p id="dropzone-help" class="muted small">Accepted: documents, audio, datasets, images. Max single file size: 10 GB (subject to backend limits). We recommend compressed archives for large datasets.</p>
+        <form id="uploadForm" class="upload-form" novalidate>
+          <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-describedby="dropzone-desc">
+            <div class="dropzone-visual">
+              <svg class="drop-icon" width="56" height="56" viewBox="0 0 24 24" fill="none" aria-hidden focusable="false"><path d="M12 4v8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 15v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 11l4-6 4 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <p class="drop-main">Drag & drop files here</p>
+              <p class="drop-sub">or <button type="button" class="btn-link" id="browseBtn">browse files</button></p>
             </div>
+            <input id="fileInput" name="file" type="file" multiple aria-hidden="true" class="visually-hidden">
+          </div>
 
-            <div id="fileList" class="file-list" aria-live="polite"></div>
+          <p id="dropzone-desc" class="drop-hint">Accepted: .mp3, .wav, .pdf, .txt, .csv, .zip, .json, .png, .jpg. Max per-file: 200 MB.</p>
 
-            <fieldset class="contact-form" aria-labelledby="metadata-legend">
-              <legend id="metadata-legend" class="alt">File metadata (optional)</legend>
+          <div id="fileList" class="file-list" aria-live="polite"></div>
 
-              <label for="category">Category</label>
-              <select id="category" name="category">
-                <option value="audio">Audio</option>
-                <option value="text">Text / Transcription</option>
-                <option value="dictionary">Dictionary</option>
-                <option value="dataset">Dataset</option>
-                <option value="documentation">Documentation</option>
-                <option value="other">Other</option>
-              </select>
-
-              <label for="description">Brief description or notes</label>
-              <textarea id="description" name="description" rows="3" placeholder="Describe the file's contents, language variety, speakers, license, or any access restrictions."></textarea>
-
-              <label for="contributor">Contributor name (optional)</label>
-              <input id="contributor" name="contributor" type="text" placeholder="Your name or community affiliation">
-            </fieldset>
-
-            <div class="actions" style="display:flex;gap:0.75rem;align-items:center;margin-top:1rem;flex-wrap:wrap;">
-              <button type="submit" id="uploadBtn" class="btn" disabled>Upload files</button>
-              <div id="progressWrap" class="progress-wrap" aria-hidden="true">
-                <progress id="uploadProgress" max="100" value="0"></progress>
-                <span id="progressText" class="meta small muted">Waiting to start</span>
-              </div>
-              <div class="meta alt" style="margin-left:auto;">Uploads go to Cloudflare R2 via signed URLs or Workers — no credentials are stored here.</div>
+          <div class="meta-row">
+            <div class="meta-note">Files are reviewed by the MLP team; do not upload personal data without consent.</div>
+            <div class="actions">
+              <button type="submit" id="uploadBtn" class="btn primary" disabled>Upload</button>
+              <button type="button" id="clearBtn" class="btn ghost">Clear</button>
             </div>
+          </div>
 
-            <div class="notice" style="margin-top:1rem;font-size:.95rem;">
-              <strong>Content guidance:</strong> Please only upload material you have the right to share. Avoid personal data or sensitive recordings without informed consent. Submissions may be reviewed by the MLP team.
+          <div class="progress-wrap" aria-hidden="true">
+            <div class="progress-bar" id="progressBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <div class="progress-fill" id="progressFill"></div>
             </div>
-          </form>
-        </div>
+            <div class="progress-info"><span id="progressPercent">0%</span> <span id="progressStatus" class="muted">Waiting</span></div>
+          </div>
+
+          <div id="statusMessage" class="status-message" role="status" aria-live="polite"></div>
+        </form>
       </div>
     </section>
 
