@@ -43,10 +43,15 @@ export default {
           return new Response(JSON.stringify({ success: false, error: 'R2 signing keys not configured' }), { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() } });
         }
 
-        // Generate a safe object key: uploads/<timestamp>-<uuid>-<sanitized>
+        // Determine prefix (folder) based on filename extension, MIME type, or optional client-provided category.
+        // Allowed prefixes: audio/, docs/, images/, photos/, others/, videos/
+        const categoryOverride = (body.category && String(body.category)) || null;
+        const prefix = choosePrefix({ filename, type, categoryOverride });
+
+        // Generate a safe object key using the chosen prefix
         const uuid = generateUUID();
         const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 200);
-        const objectKey = `uploads/${Date.now()}-${uuid}-${safeName}`;
+        const objectKey = `${prefix}${Date.now()}-${uuid}-${safeName}`;
 
         // Generate a presigned PUT URL (AWS v4 style) for the R2 object
         const expires = Math.min(60 * 60, Number(env.SIGNED_URL_EXPIRES) || 900); // default 15 minutes, cap 1 hour
@@ -152,16 +157,38 @@ function toAmzDate(d) {
   const ss = String(d.getUTCSeconds()).padStart(2, '0');
   return `${yyyy}${mm}${dd}T${hh}${min}${ss}Z`;
 }
-
-async function sha256Hex(message) {
-  const msgUint8 = new TextEncoder().encode(message);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-  return bufferToHex(hashBuffer);
-}
-
-async function hmac(key, msg) {
-  const enc = new TextEncoder();
-  const keyData = enc.encode(key);
++
++// Choose an R2 prefix based on filename or mimetype, or accept a safe category override
++function choosePrefix({ filename, type, categoryOverride }) {
++  const normalized = (s) => (s || '').toLowerCase();
++  const ext = normalized(filename).split('.').pop();
++  const t = normalized(type || '');
++
++  const allowed = new Set(['audio', 'docs', 'images', 'photos', 'other', 'others', 'videos']);
++  if (categoryOverride && allowed.has(categoryOverride.replace(/\/$/, ''))) {
++    const c = categoryOverride.replace(/\/$/, '');
++    // normalize 'other' -> 'others'
++    if (c === 'other') return 'others/';
++    return `${c}/`;
++  }
++
++  // Audio
++  if (t.startsWith('audio') || ['mp3','wav','ogg','m4a','flac'].includes(ext)) return 'audio/';
++  // Video
++  if (t.startsWith('video') || ['mp4','mov','mkv','webm','avi'].includes(ext)) return 'videos/';
++  // Documents (pdf, office, text)
++  if (['pdf','doc','docx','txt','csv','json','md','rtf'].includes(ext) || t.startsWith('text') || t === 'application/pdf' || t.includes('officedocument')) return 'docs/';
++  // Photos: common photographic image types
++  if (['jpg','jpeg','png','webp','heic','heif'].includes(ext)) return 'photos/';
++  // Images: svg, gif, bmp, tiff
++  if (t.startsWith('image') || ['svg','gif','bmp','tif','tiff'].includes(ext)) return 'images/';
++  // Archives and others
++  if (['zip','gz','tar','7z'].includes(ext)) return 'others/';
++
++  // Default
++  return 'others/';
++}
+*** End Patch
   const cryptoKey = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const sig = await crypto.subtle.sign('HMAC', cryptoKey, enc.encode(msg));
   return new Uint8Array(sig);
