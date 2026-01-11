@@ -15,6 +15,16 @@ app.use(express.urlencoded({ extended: true }));
 // via http://localhost:3000/upload/index.html during local testing.
 app.use('/upload', express.static(__dirname));
 
+// Also serve project-root static assets so the upload page can load site-root
+// resources (e.g. /js/script.js, /css/upload.css, /assets/...) when testing locally.
+app.use('/js', express.static(path.join(__dirname, '..', 'js')));
+app.use('/css', express.static(path.join(__dirname, '..', 'css')));
+app.use('/assets', express.static(path.join(__dirname, '..', 'assets')));
+
+// Also expose the project root for convenience so absolute site-root paths resolve
+// during local testing (serves index.html, other pages, etc.)
+app.use('/', express.static(path.join(__dirname, '..')));
+
 app.post('/api/upload', upload.array('files'), (req, res) => {
   const files = req.files || [];
   const out = files.map(f => ({ originalName: f.originalname, size: f.size, tmpPath: f.path }));
