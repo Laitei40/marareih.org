@@ -1,117 +1,21 @@
+// DEPRECATED worker: This project uses Cloudflare Pages + Pages Functions
+// for static assets and API routes. Leaving this file in the repo is fine for
+// reference, but do NOT deploy this as a standalone Worker or use it as a
+// reverse proxy — it can cause static assets to be served as HTML (MIME issues).
+
+// To avoid accidental proxying if this Worker is deployed, respond with
+// a clear 410 Gone for all requests. This prevents the Worker from serving
+// static content and encourages use of Pages Functions at /functions/api/*.
+
 export default {
   async fetch(request, env) {
-    const url = new URL(request.url);
-    const path = url.pathname;
-
-    /* ===============================
-       CORS preflight
-    =============================== */
+    // Handle preflight (still return CORS so browsers get consistent responses)
     if (request.method === 'OPTIONS') {
-      return new Response(null, {
-        status: 204,
-        headers: cors()
-      });
+      return new Response(null, { status: 204, headers: cors() });
     }
 
-    /* ===============================
-       Ignore favicon
-    =============================== */
-    if (path === '/favicon.ico') {
-      return new Response(null, { status: 204 });
-    }
-
-    /* ===============================
-       Allow GET requests for static assets to pass through to Pages
-       - Important: Worker should act as API-only and must NOT serve static files
-       - Forward: /, *.html, CSS, JS, images, fonts, and the upload subpath
-    =============================== */
-    const staticExt = /\.(css|js|png|jpe?g|svg|ico|woff2?|ttf|eot)$/i;
-    if (
-      request.method === 'GET' && (
-        path === '/' ||
-        path.endsWith('.html') ||
-        staticExt.test(path) ||
-        path.startsWith('/upload/')
-      )
-    ) {
-      // Let Pages serve static content; do not modify or return HTML here.
-      return fetch(request);
-    }
-
-    /* ===============================
-       POST /api/upload
-    =============================== */
-    if (path === '/api/upload') {
-      if (request.method !== 'POST') {
-        return json(
-          { success: false, error: 'Method Not Allowed' },
-          405
-        );
-      }
-
-      try {
-        const form = await request.formData();
-        const file = form.get('file');
-
-        if (!file || !(file instanceof File)) {
-          return json(
-            { success: false, error: 'Missing file' },
-            400
-          );
-        }
-
-        /* ===============================
-           Size limit (default 50 MB)
-        =============================== */
-        const MAX_BYTES =
-          Number(env.MAX_UPLOAD_BYTES) || 50 * 1024 * 1024;
-
-        if (file.size > MAX_BYTES) {
-          return json(
-            { success: false, error: 'File too large' },
-            413
-          );
-        }
-
-        /* ===============================
-           Generate safe object key
-        =============================== */
-        const prefix = choosePrefix(file);
-        const safeName = sanitizeFilename(file.name);
-        const key = `${prefix}${Date.now()}-${crypto.randomUUID()}-${safeName}`;
-
-        /* ===============================
-           Store in R2
-        =============================== */
-        await env.MLP_UPLOADS.put(key, file.stream(), {
-          httpMetadata: {
-            contentType: file.type || 'application/octet-stream'
-          }
-        });
-
-        return json({
-          success: true,
-          key,
-          size: file.size,
-          type: file.type
-        });
-      } catch (err) {
-        return json(
-          {
-            success: false,
-            error: 'Upload failed',
-            detail: String(err?.message || err)
-          },
-          500
-        );
-      }
-    }
-
-    /* ===============================
-       Fallback
-    =============================== */
-    return new Response('Not Found', {
-      status: 404,
+    return new Response('This Worker is deprecated. Use Pages Functions for API endpoints.', {
+      status: 410,
       headers: cors()
     });
   }
