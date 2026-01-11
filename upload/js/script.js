@@ -7,8 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const dropzone = document.querySelector('.dropzone');
   const fileList = document.getElementById('fileList');
   const uploadBtn = document.getElementById('uploadBtn');
-  const progressEl = document.getElementById('uploadProgress');
-  const progressText = document.getElementById('progressText');
+  // legacy placeholders removed: using dedicated progress elements below
 
   let selectedFiles = [];
   let uploading = false;
@@ -124,20 +123,32 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       xhr.onload = function () {
-        try {
-          const json = JSON.parse(xhr.responseText || '{}');
-          if (xhr.status >= 200 && xhr.status < 300 && json.success) {
+        // Helpful handling for common failures (405 when testing via static server)
+        if (xhr.status === 405) {
+          progressStatus.textContent = 'Failed';
+          return reject({ error: 'Endpoint not available (405). Run the Cloudflare Worker / Pages Functions (wrangler dev) or deploy the Worker.' });
+        }
+
+        // Try to parse JSON response for success/failure details
+        let json = null;
+        try { json = JSON.parse(xhr.responseText || '{}'); } catch (err) { json = null; }
+
+        if (xhr.status >= 200 && xhr.status < 300) {
+          if (json && json.success) {
             progressFill.style.width = '100%';
             progressPercent.textContent = '100%';
             progressStatus.textContent = 'Completed';
-            resolve(json);
-          } else {
-            progressStatus.textContent = 'Failed';
-            reject(json || { error: 'Upload failed', status: xhr.status });
+            return resolve(json);
           }
-        } catch (err) {
-          reject({ error: 'Invalid JSON response', details: err.message });
+          // 2xx but no success flag -> treat as failure with details
+          progressStatus.textContent = 'Failed';
+          return reject(json || { error: 'Upload failed (no success flag)' });
         }
+
+        // Non-2xx responses
+        progressStatus.textContent = 'Failed';
+        if (json && json.error) return reject(json);
+        return reject({ error: `Upload failed (HTTP ${xhr.status})` });
       };
 
       xhr.onerror = function () { progressStatus.textContent = 'Network error'; reject({ error: 'Network error' }); };
