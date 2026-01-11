@@ -109,7 +109,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Upload sequence — direct POST to /api/upload with FormData
+  // API base — replace YOUR_USERNAME with your Cloudflare Workers account name
+  // Example: const API_BASE = 'https://mlp-uploads.alice.workers.dev'
+  const API_BASE = 'https://mlp-uploads.YOUR_USERNAME.workers.dev';
+
+  // Upload sequence — POST FormData directly to the standalone Worker
   async function performUpload(files, metadata) {
     // Create a single FormData and append all files + optional metadata
     const fd = new FormData();
@@ -120,37 +124,34 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    return await new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/api/upload', true);
+    progressStatus.textContent = 'Uploading...';
 
-      xhr.upload.onprogress = function (e) {
-        let percent = 0;
-        if (e.lengthComputable) percent = Math.round((e.loaded / e.total) * 100);
-        progressFill.style.width = percent + '%';
-        progressPercent.textContent = percent + '%';
-        progressBar.setAttribute('aria-valuenow', percent);
-        progressStatus.textContent = `Uploading — ${percent}%`;
-      };
+    try {
+      const res = await fetch(`${API_BASE}/api/upload`, {
+        method: 'POST',
+        body: fd,
+        credentials: 'omit'
+      });
 
-      xhr.onload = function () {
-        if (xhr.status !== 200) {
-          let msg = xhr.responseText || '';
-          try { const j = JSON.parse(xhr.responseText); if (j && j.error) msg = j.error; } catch (e) {}
-          reject({ error: `Upload failed (HTTP ${xhr.status}): ${msg}` });
-          return;
-        }
-        let resp = {};
-        try { resp = JSON.parse(xhr.responseText || '{}'); } catch (e) { resp = {}; }
-        const uploaded = (resp && Array.isArray(resp.uploaded) && resp.uploaded.length) ? resp.uploaded : files.map(f => ({ originalName: f.name, size: f.size }));
-        resolve({ success: true, uploaded, raw: resp });
-      };
+      const text = await res.text();
+      let json = {};
+      try { json = text ? JSON.parse(text) : {}; } catch (e) { json = {}; }
 
-      xhr.onerror = function () { reject({ error: 'Network error during file upload' }); };
-      xhr.onabort = function () { reject({ error: 'Upload aborted' }); };
+      if (!res.ok) {
+        const msg = json && json.error ? json.error : (text || `HTTP ${res.status}`);
+        throw { error: `Upload failed: ${msg}` };
+      }
 
-      xhr.send(fd);
-    });
+      const uploaded = (json && Array.isArray(json.uploaded) && json.uploaded.length) ? json.uploaded : files.map(f => ({ originalName: f.name, size: f.size }));
+      // set progress to complete
+      progressFill.style.width = '100%';
+      progressPercent.textContent = '100%';
+      progressBar.setAttribute('aria-valuenow', 100);
+      progressStatus.textContent = `Uploaded`;
+      return { success: true, uploaded, raw: json };
+    } catch (err) {
+      throw err;
+    }
   }
 
   form.addEventListener('submit', async (e) => {

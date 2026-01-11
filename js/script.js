@@ -485,6 +485,10 @@
  * - Uses XHR to report upload progress via onProgress(percent, loaded, total).
  */
 (function(){
+  // API base — set window.MLP_UPLOAD_API to your Worker URL in pages, e.g.
+  // <script>window.MLP_UPLOAD_API = 'https://mlp-uploads.YOUR_USERNAME.workers.dev'</script>
+  const API_BASE = window.MLP_UPLOAD_API || 'https://mlp-uploads.YOUR_USERNAME.workers.dev';
+
   function uploadFile(file, options={}) {
     const onProgress = options.onProgress;
     return new Promise((resolve, reject) => {
@@ -494,7 +498,7 @@
         if (options.category) fd.append('category', options.category);
 
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/api/upload', true);
+        xhr.open('POST', `${API_BASE}/api/upload`, true);
 
         xhr.upload.onprogress = function(e){
           if (e.lengthComputable && typeof onProgress === 'function') {

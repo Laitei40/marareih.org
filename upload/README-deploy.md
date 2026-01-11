@@ -43,5 +43,5 @@ Important notes
 
 Worker signing notes
 
-- The Worker implements a POST `/api/upload/init` endpoint that returns a short-lived presigned PUT URL (AWS v4 style) the browser can PUT directly to. The Worker must be configured with R2 HMAC keys (see above). The Worker never receives raw file data.
+- The standalone Worker implements a POST `/api/upload` endpoint that accepts multipart/form-data and stores files directly in R2. The Worker is deployed separately from Pages and is responsible only for API requests; Pages serves static assets.
 - The signed URL is single-object and short-lived by default (15 minutes). Adjust `SIGNED_URL_EXPIRES` in the Worker env if needed (cap 1 hour).
