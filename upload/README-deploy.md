@@ -23,7 +23,7 @@ Deploying the Worker to Cloudflare
 
 ```toml
 name = "mlp-uploads"
-main = "cloudflare-worker/worker.js"
+main = "worker.js"  # worker entry inside the standalone worker repo (mlp-uploads-worker)
 compatibility_date = "2026-01-01"
 
 [[r2_buckets]]
