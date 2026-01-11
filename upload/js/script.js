@@ -16,28 +16,39 @@ document.addEventListener('DOMContentLoaded', () => {
     // render file list
     fileList.innerHTML = '';
     if (selectedFiles.length === 0) {
-      fileList.innerHTML = '<div class="meta alt">No files selected</div>';
+      fileList.innerHTML = '<div class="muted">No files selected</div>';
     } else {
       selectedFiles.forEach((file, idx) => {
         const item = document.createElement('div');
-        item.className = 'file-item';
+        item.className = 'file-row';
 
         const meta = document.createElement('div');
         meta.className = 'file-meta';
+
+        // icon
+        const icon = getFileIcon(file);
+        icon.classList.add('file-icon');
+
+        // info container
+        const info = document.createElement('div');
+        info.style.minWidth = '0';
         const name = document.createElement('div');
         name.className = 'file-name';
         name.textContent = file.name;
         const size = document.createElement('div');
         size.className = 'file-size';
         size.textContent = (file.size >= 1024*1024) ? (Math.round(file.size/1024/1024) + ' MB') : (Math.round(file.size/1024) + ' KB');
-        meta.appendChild(name);
-        meta.appendChild(size);
+        info.appendChild(name);
+        info.appendChild(size);
+
+        meta.appendChild(icon);
+        meta.appendChild(info);
 
         const remove = document.createElement('button');
-        remove.className = 'file-remove';
+        remove.className = 'btn-file-remove';
         remove.type = 'button';
         remove.setAttribute('aria-label', 'Remove ' + file.name);
-        remove.textContent = 'Remove';
+        remove.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M3 6h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M14 11v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg> Remove';
         remove.addEventListener('click', () => {
           selectedFiles.splice(idx, 1);
           updateUI();
@@ -229,5 +240,27 @@ document.addEventListener('DOMContentLoaded', () => {
       ++u;
     } while(Math.abs(bytes) >= thresh && u < units.length - 1);
     return bytes.toFixed(1)+' '+units[u];
+  }
+
+  // file icon helper — returns a DOM element (span) with a small SVG
+  function getFileIcon(file) {
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    const type = file.type || '';
+    const el = document.createElement('span');
+    el.className = 'file-icon';
+    let svg = '';
+    if (type.startsWith('audio') || ['mp3','wav','ogg'].includes(ext)) {
+      svg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M9 9v6h4l5 4V5l-5 4H9z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    } else if (type.startsWith('image') || ['png','jpg','jpeg','gif'].includes(ext)) {
+      svg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M8 14l2.5-3 3 4 2-2 3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    } else if (['zip','gz'].includes(ext)) {
+      svg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M8 7h8M8 11h8M8 15h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    } else if (['pdf','doc','docx','txt','csv','json'].includes(ext) || type.includes('text') || ext==='pdf') {
+      svg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="1.4"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="1.4"/></svg>';
+    } else {
+      svg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.4"/><path d="M8 12h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+    }
+    el.innerHTML = svg;
+    return el;
   }
 });
