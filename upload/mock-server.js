@@ -18,6 +18,43 @@ app.post('/api/upload', upload.array('files'), (req, res) => {
   res.json({ success: true, uploaded: out });
 });
 
+// Signed-upload init endpoint for UI testing
+app.post('/api/upload/init', (req, res) => {
+  const { filename, size, type } = req.body || {};
+  if (!filename || !size) return res.status(400).json({ success: false, error: 'Missing filename or size' });
+
+  // generate a pseudo objectKey and return a mock signed URL
+  const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 200);
+  const objectKey = `uploads/${Date.now()}-${Math.random().toString(16).slice(2,10)}-${safeName}`;
+  const uploadUrl = `http://localhost:${PORT}/mock-upload/${encodeURIComponent(objectKey)}`;
+
+  // For testing, return a short JSON with uploadUrl and objectKey
+  res.json({ success: true, uploadUrl, objectKey });
+});
+
+// Handle direct PUT to mock-upload path (simulates R2 PUT)
+app.put('/mock-upload/:objectKey', (req, res) => {
+  const objectKey = req.params.objectKey;
+  const saveDir = path.join(__dirname, 'tmp-uploads');
+  if (!fs.existsSync(saveDir)) fs.mkdirSync(saveDir, { recursive: true });
+
+  const filename = objectKey.split('/').pop() || `upload-${Date.now()}`;
+  const outPath = path.join(saveDir, filename);
+  const writeStream = fs.createWriteStream(outPath);
+
+  let size = 0;
+  req.on('data', chunk => { size += chunk.length; writeStream.write(chunk); });
+  req.on('end', () => {
+    writeStream.end();
+    console.log(`Saved mock-upload ${objectKey} -> ${outPath} (${size} bytes)`);
+    res.status(200).json({ success: true, objectKey, savedTo: outPath, size });
+  });
+  req.on('error', (err) => {
+    writeStream.destroy();
+    res.status(500).json({ success: false, error: String(err) });
+  });
+});
+
 app.get('/', (req, res) => res.send('Mock upload server running'));
 
 const PORT = process.env.PORT || 3000;
