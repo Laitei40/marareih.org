@@ -11,6 +11,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files from the `upload` directory so the UI can be opened
+// via http://localhost:3000/upload/index.html during local testing.
+app.use('/upload', express.static(__dirname));
+
 app.post('/api/upload', upload.array('files'), (req, res) => {
   const files = req.files || [];
   const out = files.map(f => ({ originalName: f.originalname, size: f.size, tmpPath: f.path }));
