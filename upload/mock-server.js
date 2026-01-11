@@ -25,7 +25,7 @@ app.use('/assets', express.static(path.join(__dirname, '..', 'assets')));
 // during local testing (serves index.html, other pages, etc.)
 app.use('/', express.static(path.join(__dirname, '..')));
 
-app.post('/api/upload', upload.array('files'), (req, res) => {
+app.post('/api/upload', upload.array('file'), (req, res) => {
   const files = req.files || [];
   const out = files.map(f => ({ originalName: f.originalname, size: f.size, tmpPath: f.path }));
   console.log('Received files:', out);

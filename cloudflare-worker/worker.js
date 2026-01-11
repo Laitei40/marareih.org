@@ -21,11 +21,20 @@ export default {
     }
 
     /* ===============================
-       Allow static assets to pass through
-       (important for Pages / upload UI)
+       Allow GET requests for static assets to pass through to Pages
+       - Important: Worker should act as API-only and must NOT serve static files
+       - Forward: /, *.html, CSS, JS, images, fonts, and the upload subpath
     =============================== */
     const staticExt = /\.(css|js|png|jpe?g|svg|ico|woff2?|ttf|eot)$/i;
-    if (path.startsWith('/upload/') || staticExt.test(path)) {
+    if (
+      request.method === 'GET' && (
+        path === '/' ||
+        path.endsWith('.html') ||
+        staticExt.test(path) ||
+        path.startsWith('/upload/')
+      )
+    ) {
+      // Let Pages serve static content; do not modify or return HTML here.
       return fetch(request);
     }
 
