@@ -1,10 +1,7 @@
 name = "mlp-uploads"
 main = "worker.js"
-compatibility_date = "2026-01-01"
+compatibility_date = "2026-01-11"
 
 [[r2_buckets]]
 binding = "MLP_UPLOADS"
-bucket_name = "alldata"
-
-[vars]
-MAX_UPLOAD_BYTES = "52428800" # 50 MB
+bucket_name = "alldata" # ← your real R2 bucket

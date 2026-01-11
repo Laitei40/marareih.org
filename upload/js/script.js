@@ -109,9 +109,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // API base — replace YOUR_USERNAME with your Cloudflare Workers account name
-  // Example: const API_BASE = 'https://mlp-uploads.alice.workers.dev'
-  const API_BASE = 'https://mlp-uploads.YOUR_USERNAME.workers.dev';
+ const API_BASE = "https://mlp-uploads.teiteipara.workers.dev";
+
+fetch(`${API_BASE}/api/upload`, {
+  method: "POST",
+  body: formData,
+});
+
 
   // Upload sequence — POST FormData directly to the standalone Worker
   async function performUpload(files, metadata) {
