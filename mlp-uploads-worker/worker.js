@@ -99,29 +99,29 @@ function sanitize(name) {
 // Folder routing (everything allowed)
 // --------------------------------------------------
 function choosePrefix(file) {
-  const ext = file.name.split('.').pop().toLowerCase();
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
   const type = (file.type || '').toLowerCase();
 
+  // Audio files
   if (type.startsWith('audio') || ['mp3','wav','ogg','flac','m4a'].includes(ext)) {
     return 'audio/';
   }
 
+  // Video files
   if (type.startsWith('video') || ['mp4','mov','mkv','webm','avi'].includes(ext)) {
     return 'videos/';
   }
 
-  if (['pdf','doc','docx','txt','csv','json','md'].includes(ext)) {
-    return 'docs/';
-  }
-
-  if (['jpg','jpeg','png','webp','heic','heif'].includes(ext)) {
-    return 'photos/';
-  }
-
-  if (type.startsWith('image')) {
+  // Images (includes common image extensions + svg)
+  if (type.startsWith('image') || ['jpg','jpeg','png','webp','heic','heif','svg'].includes(ext)) {
     return 'images/';
   }
 
-  // ✅ EVERYTHING ELSE (xml, exe, unknown, binary)
+  // Documents
+  if (type.startsWith('text') || ['pdf','doc','docx','txt','csv','json','md'].includes(ext)) {
+    return 'docs/';
+  }
+
+  // Anything else -> others/
   return 'others/';
 }
