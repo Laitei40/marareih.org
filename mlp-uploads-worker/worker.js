@@ -27,6 +27,36 @@ export default {
       const formData = await request.formData();
       const files = formData.getAll('file');
 
+      // Cloudflare Turnstile verification
+      const token = formData.get('cf-turnstile-response');
+      if (!env.TURNSTILE_SECRET) {
+        return new Response(
+          JSON.stringify({ error: 'Server misconfiguration: TURNSTILE_SECRET not set' }),
+          { status: 500, headers: jsonCors() }
+        );
+      }
+      if (!token) {
+        return new Response(
+          JSON.stringify({ error: 'Turnstile token missing' }),
+          { status: 400, headers: jsonCors() }
+        );
+      }
+
+      const verifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+        method: 'POST',
+        body: new URLSearchParams({ secret: env.TURNSTILE_SECRET, response: token }),
+      });
+
+      let verifyJson = {};
+      try { verifyJson = await verifyRes.json(); } catch (e) { verifyJson = {}; }
+
+      if (!verifyJson.success) {
+        return new Response(
+          JSON.stringify({ error: 'Turnstile verification failed', detail: verifyJson['error-codes'] || [] }),
+          { status: 403, headers: jsonCors() }
+        );
+      }
+
       if (!files.length) {
         return new Response(
           JSON.stringify({ error: 'No files provided' }),

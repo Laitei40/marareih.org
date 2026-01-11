@@ -15,7 +15,10 @@ Local testing options
      - `R2_BUCKET_NAME` - your R2 bucket name
      - `R2_ACCESS_KEY_ID` - (R2 HMAC access key id)
      - `R2_SECRET_ACCESS_KEY` - (R2 HMAC secret key)
+     - `TURNSTILE_SECRET` - Cloudflare Turnstile secret (used by the Worker to verify tokens)
   4. Run `wrangler dev` from repository root to test the Worker locally, or `wrangler publish` to deploy.
+
+     - When testing with `wrangler dev`, set the Turnstile secret with `wrangler secret put TURNSTILE_SECRET` (or add it to `wrangler.toml`), so the Worker can verify tokens during local dev.
 
 Deploying the Worker to Cloudflare
 
@@ -38,6 +41,7 @@ Important notes
 
 - This project is configured for a standalone Cloudflare Worker. The Pages Functions handler was removed to avoid conflicting `/api/upload` routes. Use the Worker and R2 binding `MLP_UPLOADS`.
 - Do not embed R2 credentials in client-side code.
+- Replace the placeholder `__CF_TURNSTILE_SITEKEY__` in `upload/index.html` with your Turnstile site key (or inject it at build time).
 - For very large uploads (>100-200MB) implement a signed-upload flow: have the Worker issue short-lived put URLs so browsers can upload directly to R2.
 - Validate file types and sizes server-side in the Worker before writing to R2.
 

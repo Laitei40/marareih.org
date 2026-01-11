@@ -127,6 +127,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const fd = new FormData();
     files.forEach(f => fd.append('file', f));
 
+    // Attach Cloudflare Turnstile token if present
+    try {
+      const tokenEl = document.querySelector('input[name="cf-turnstile-response"]');
+      const token = tokenEl ? tokenEl.value : '';
+      if (token) fd.append('cf-turnstile-response', token);
+    } catch (e) {
+      console.warn('Turnstile token read failed', e);
+    }
+
     progressStatus.textContent = 'Uploading…';
 
     const res = await fetch(`${API_BASE}/api/upload`, {
@@ -149,6 +158,14 @@ document.addEventListener('DOMContentLoaded', () => {
   form.addEventListener('submit', async e => {
     e.preventDefault();
     if (selectedFiles.length === 0) return;
+
+    // Ensure Turnstile verification completed
+    const tokenEl = document.querySelector('input[name="cf-turnstile-response"]');
+    if (!tokenEl || !tokenEl.value) {
+      statusMessage.className = 'status-message error';
+      statusMessage.textContent = 'Please complete the verification to continue.';
+      return;
+    }
 
     uploading = true;
     uploadBtn.disabled = true;
@@ -173,6 +190,11 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(err);
       statusMessage.className = 'status-message error';
       statusMessage.textContent = `Upload failed: ${err.message}`;
+
+      // If server indicates a Turnstile verification issue, reset the widget where possible
+      if (/turnstile|verification/i.test(err.message) && window.turnstile && typeof window.turnstile.reset === 'function') {
+        try { window.turnstile.reset(); } catch (e) { console.warn('turnstile.reset() failed', e); }
+      }
     } finally {
       uploading = false;
       uploadBtn.disabled = true;
