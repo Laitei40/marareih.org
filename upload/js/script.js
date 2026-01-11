@@ -109,91 +109,48 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Upload sequence using signed PUT URLs from Worker
-  // Flow per file:
-  // 1) POST /api/upload/init { filename, size, type } -> { uploadUrl, objectKey }
-  // 2) PUT file bytes to uploadUrl (direct to R2)
-  // 3) Optionally, record completion server-side (not implemented here)
+  // Upload sequence — direct POST to /api/upload with FormData
   async function performUpload(files, metadata) {
-    // sequential upload to reduce concurrency & memory usage
-    const uploaded = [];
-    let totalBytes = files.reduce((s, f) => s + f.size, 0);
-    let totalUploaded = 0;
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      progressStatus.textContent = `Preparing upload (${i+1}/${files.length})`;
-
-      // Request signed URL
-      let initResp;
-      try {
-        initResp = await fetch('/api/upload/init', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({ filename: file.name, size: file.size, type: file.type || 'application/octet-stream' })
-        });
-      } catch (err) {
-        throw { error: 'Network error requesting upload URL' };
-      }
-
-      if (initResp.status === 413) throw { error: 'File too large' };
-      if (initResp.status === 400) {
-        const j = await initResp.json().catch(()=>({}));
-        throw { error: j && j.error ? j.error : 'Invalid upload init request' };
-      }
-
-      if (!initResp.ok) {
-        const j = await initResp.json().catch(()=>({}));
-        throw { error: j && j.error ? j.error : `Upload init failed (HTTP ${initResp.status})` };
-      }
-
-      const initJson = await initResp.json();
-      const uploadUrl = initJson.uploadUrl;
-      const objectKey = initJson.objectKey;
-      if (!uploadUrl) throw { error: 'No upload URL returned' };
-
-      // PUT file directly to R2 using XMLHttpRequest for progress events
-      await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('PUT', uploadUrl, true);
-        // Let R2 accept the Content-Type header set by browser
-        if (file.type) xhr.setRequestHeader('Content-Type', file.type);
-
-        xhr.upload.onprogress = function (e) {
-          let filePercent = 0;
-          if (e.lengthComputable) filePercent = Math.round((e.loaded / e.total) * 100);
-          // total progress
-          const totalSoFar = totalUploaded + (e.loaded || 0);
-          const totalPercent = Math.round((totalSoFar / totalBytes) * 100);
-          progressFill.style.width = totalPercent + '%';
-          progressPercent.textContent = totalPercent + '%';
-          progressBar.setAttribute('aria-valuenow', totalPercent);
-          progressStatus.textContent = `Uploading ${file.name} — ${filePercent}%`;
-        };
-
-        xhr.onload = function () {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            // Completed this file
-            totalUploaded += file.size;
-            progressStatus.textContent = `Uploaded ${file.name}`;
-            uploaded.push({ originalName: file.name, size: file.size, objectKey });
-            resolve();
-          } else {
-            // Try to parse error
-            let json = null;
-            try { json = JSON.parse(xhr.responseText || '{}'); } catch (e) { json = null; }
-            reject({ error: (json && json.error) ? json.error : `Upload failed (HTTP ${xhr.status})` });
-          }
-        };
-
-        xhr.onerror = function () { reject({ error: 'Network error during file upload' }); };
-        xhr.onabort = function () { reject({ error: 'Upload aborted' }); };
-
-        xhr.send(file);
+    // Create a single FormData and append all files + optional metadata
+    const fd = new FormData();
+    files.forEach(f => fd.append('file', f));
+    if (metadata && typeof metadata === 'object') {
+      Object.keys(metadata).forEach(k => {
+        if (metadata[k]) fd.append(k, metadata[k]);
       });
     }
 
-    return { success: true, uploaded };
+    return await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/upload', true);
+
+      xhr.upload.onprogress = function (e) {
+        let percent = 0;
+        if (e.lengthComputable) percent = Math.round((e.loaded / e.total) * 100);
+        progressFill.style.width = percent + '%';
+        progressPercent.textContent = percent + '%';
+        progressBar.setAttribute('aria-valuenow', percent);
+        progressStatus.textContent = `Uploading — ${percent}%`;
+      };
+
+      xhr.onload = function () {
+        if (xhr.status !== 200) {
+          let msg = xhr.responseText || '';
+          try { const j = JSON.parse(xhr.responseText); if (j && j.error) msg = j.error; } catch (e) {}
+          reject({ error: `Upload failed (HTTP ${xhr.status}): ${msg}` });
+          return;
+        }
+        let resp = {};
+        try { resp = JSON.parse(xhr.responseText || '{}'); } catch (e) { resp = {}; }
+        const uploaded = (resp && Array.isArray(resp.uploaded) && resp.uploaded.length) ? resp.uploaded : files.map(f => ({ originalName: f.name, size: f.size }));
+        resolve({ success: true, uploaded, raw: resp });
+      };
+
+      xhr.onerror = function () { reject({ error: 'Network error during file upload' }); };
+      xhr.onabort = function () { reject({ error: 'Upload aborted' }); };
+
+      xhr.send(fd);
+    });
   }
 
   form.addEventListener('submit', async (e) => {

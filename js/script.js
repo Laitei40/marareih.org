@@ -478,58 +478,23 @@
 
 /* ------------------ Upload helpers (site-global) ------------------ */
 /**
- * mlpUpload.initUpload(metadata)
- * - metadata: { filename, size, type, category }
- * Returns: { uploadUrl, objectKey, workerPresent }
- *
- * mlpUpload.uploadFile(file, { onProgress }) -> Promise<{ objectKey, status }>
+ * mlpUpload.uploadFile(file, { onProgress, category }) -> Promise<{ objectKey, status }>
  *
  * Notes:
- * - This helper POSTs to /api/upload/init and then PUTs file bytes to the returned uploadUrl.
- * - Uses XHR for the PUT to report progress via onProgress(percent, loaded, total).
- * - If /api/upload/init is not available or returns HTML, an Error is thrown suggesting to run local mock server or configure the Worker route.
+ * - This helper POSTs to /api/upload with FormData containing the file and optional metadata.
+ * - Uses XHR to report upload progress via onProgress(percent, loaded, total).
  */
 (function(){
-  async function initUpload(metadata){
-    if (!metadata || typeof metadata.filename !== 'string' || typeof metadata.size !== 'number') {
-      throw new Error('initUpload requires metadata with filename (string) and size (number).');
-    }
-    const res = await fetch('/api/upload/init', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(metadata),
-      credentials: 'same-origin'
-    }).catch((err)=>{ throw new Error('Network error during upload init: '+err.message); });
-
-    const contentType = res.headers.get('content-type') || '';
-    if (!res.ok) {
-      // if HTML returned it's likely the route isn't configured
-      const text = await res.text().catch(()=>null);
-      if (contentType.includes('text/html')) {
-        throw new Error('Upload init endpoint returned HTML (likely not configured). Run the local mock server or configure the Worker route.');
-      }
-      let msg = text || `Upload init failed: ${res.status} ${res.statusText}`;
-      throw new Error(msg);
-    }
-
-    // parse JSON
-    let json = null;
-    try { json = await res.json(); } catch (e) { throw new Error('Upload init returned invalid JSON'); }
-
-    if (!json.uploadUrl) throw new Error('Upload init did not return uploadUrl');
-    return { uploadUrl: json.uploadUrl, objectKey: json.objectKey, workerPresent: (res.headers.get('X-MLP-Worker') === 'true') };
-  }
-
   function uploadFile(file, options={}) {
     const onProgress = options.onProgress;
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
       try {
-        const init = await initUpload({ filename: file.name, size: file.size, type: file.type, category: options.category || undefined });
+        const fd = new FormData();
+        fd.append('file', file);
+        if (options.category) fd.append('category', options.category);
 
         const xhr = new XMLHttpRequest();
-        xhr.open('PUT', init.uploadUrl, true);
-        // Set content type if known
-        try { if (file.type) xhr.setRequestHeader('Content-Type', file.type); else xhr.setRequestHeader('Content-Type', 'application/octet-stream'); } catch(e){ /* some CORS servers disallow this header; ignore */ }
+        xhr.open('POST', '/api/upload', true);
 
         xhr.upload.onprogress = function(e){
           if (e.lengthComputable && typeof onProgress === 'function') {
@@ -539,15 +504,19 @@
 
         xhr.onload = function(){
           if (xhr.status >= 200 && xhr.status < 300) {
-            resolve({ objectKey: init.objectKey, status: xhr.status });
+            let resp = {};
+            try { resp = JSON.parse(xhr.responseText || '{}'); } catch(e){}
+            resolve({ objectKey: resp.objectKey || null, status: xhr.status, raw: resp });
           } else {
-            reject(new Error('Upload failed: ' + xhr.status + ' ' + xhr.statusText + ' - ' + (xhr.responseText || '').slice(0,250)));
+            let text = xhr.responseText || '';
+            try { const j = JSON.parse(text); if (j && j.error) text = j.error; } catch(e){}
+            reject(new Error('Upload failed: ' + xhr.status + ' ' + (text || xhr.statusText)));
           }
         };
         xhr.onerror = function(){ reject(new Error('Network error during file upload')); };
         xhr.onabort = function(){ reject(new Error('Upload aborted')); };
 
-        xhr.send(file);
+        xhr.send(fd);
       } catch (err) {
         reject(err);
       }
@@ -556,7 +525,6 @@
 
   // Expose
   window.mlpUpload = {
-    initUpload,
     uploadFile
   };
 })();
