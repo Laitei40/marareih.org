@@ -1,17 +1,17 @@
 export default {
   async fetch(request, env) {
-    // -----------------------------
+    // --------------------
     // CORS preflight
-    // -----------------------------
+    // --------------------
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: cors() });
     }
 
     const url = new URL(request.url);
 
-    // -----------------------------
-    // Only allow POST /api/upload
-    // -----------------------------
+    // --------------------
+    // Only POST /api/upload
+    // --------------------
     if (url.pathname !== '/api/upload') {
       return new Response('Not Found', { status: 404, headers: cors() });
     }
@@ -24,9 +24,6 @@ export default {
     }
 
     try {
-      // -----------------------------
-      // Parse FormData
-      // -----------------------------
       const formData = await request.formData();
       const files = formData.getAll('file');
 
@@ -39,12 +36,10 @@ export default {
 
       const uploaded = [];
 
-      // -----------------------------
-      // Upload each file
-      // -----------------------------
       for (const file of files) {
         if (!(file instanceof File) || file.size === 0) continue;
 
+        // 🔥 NO FILE TYPE BLOCKING
         const prefix = choosePrefix(file);
         const safeName = sanitize(file.name);
         const key = `${prefix}${Date.now()}-${crypto.randomUUID()}-${safeName}`;
@@ -59,7 +54,7 @@ export default {
           key,
           originalName: file.name,
           size: file.size,
-          type: file.type,
+          type: file.type || 'unknown',
         });
       }
 
@@ -101,7 +96,7 @@ function sanitize(name) {
 }
 
 // --------------------------------------------------
-// Folder routing (NO uploads/ EVER)
+// Folder routing (everything allowed)
 // --------------------------------------------------
 function choosePrefix(file) {
   const ext = file.name.split('.').pop().toLowerCase();
@@ -115,7 +110,7 @@ function choosePrefix(file) {
     return 'videos/';
   }
 
-  if (['pdf','doc','docx','txt','csv','json','md'].includes(ext) || type.startsWith('text')) {
+  if (['pdf','doc','docx','txt','csv','json','md'].includes(ext)) {
     return 'docs/';
   }
 
@@ -123,9 +118,10 @@ function choosePrefix(file) {
     return 'photos/';
   }
 
-  if (type.startsWith('image') || ['svg','gif','bmp','tiff'].includes(ext)) {
+  if (type.startsWith('image')) {
     return 'images/';
   }
 
+  // ✅ EVERYTHING ELSE (xml, exe, unknown, binary)
   return 'others/';
 }
