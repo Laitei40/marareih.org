@@ -10,7 +10,12 @@ Local testing options
 - Wrangler Worker (recommended for full end-to-end):
   1. Install wrangler: `npm i -g wrangler`
   2. Configure `wrangler.toml` with your Cloudflare account and an R2 binding named `MLP_UPLOADS`.
-  3. Run `wrangler dev` from repository root to test the Worker locally, or `wrangler publish` to deploy.
+  3. Set the following environment variables / secrets (in `wrangler.toml` or via `wrangler secret put`):
+     - `R2_ACCOUNT_ID` - your Cloudflare account id
+     - `R2_BUCKET_NAME` - your R2 bucket name
+     - `R2_ACCESS_KEY_ID` - (R2 HMAC access key id)
+     - `R2_SECRET_ACCESS_KEY` - (R2 HMAC secret key)
+  4. Run `wrangler dev` from repository root to test the Worker locally, or `wrangler publish` to deploy.
 
 Deploying the Worker to Cloudflare
 
@@ -35,3 +40,8 @@ Important notes
 - Do not embed R2 credentials in client-side code.
 - For very large uploads (>100-200MB) implement a signed-upload flow: have the Worker issue short-lived put URLs so browsers can upload directly to R2.
 - Validate file types and sizes server-side in the Worker before writing to R2.
+
+Worker signing notes
+
+- The Worker implements a POST `/api/upload/init` endpoint that returns a short-lived presigned PUT URL (AWS v4 style) the browser can PUT directly to. The Worker must be configured with R2 HMAC keys (see above). The Worker never receives raw file data.
+- The signed URL is single-object and short-lived by default (15 minutes). Adjust `SIGNED_URL_EXPIRES` in the Worker env if needed (cap 1 hour).

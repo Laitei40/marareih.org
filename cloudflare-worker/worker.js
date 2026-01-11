@@ -7,12 +7,12 @@ export default {
         headers: corsHeaders()
       })
     }
-    // Route: only allow specific paths. We support /api/upload for R2 uploads
+
     const url = new URL(request.url);
     const pathname = url.pathname || '/';
 
-    if (pathname === '/api/upload') {
-      // Only accept POST for upload
+    // POST /api/upload/init => return a signed PUT URL for direct-to-R2 uploads
+    if (pathname === '/api/upload/init') {
       if (request.method !== 'POST') {
         return new Response(JSON.stringify({ success: false, error: 'Method Not Allowed' }), {
           status: 405,
@@ -21,87 +21,59 @@ export default {
       }
 
       try {
-        // Important: Workers have request body size limits when using the classic runtime.
-        // For large files (hundreds of MBs to GBs) we recommend implementing a signed-upload
-        // flow where the Worker returns a short-lived URL that the browser PUTs to directly.
-        // This endpoint handles small-to-moderate uploads directly via formData and R2.put.
+        // Parse JSON body
+        const body = await request.json().catch(() => null);
+        if (!body) return new Response(JSON.stringify({ success: false, error: 'Invalid JSON' }), { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() } });
 
-        const MAX_FILE_BYTES = 200 * 1024 * 1024; // 200 MB per file (adjust as needed)
-        const ALLOWED_TYPES = [
-          'application/pdf', 'text/plain', 'text/csv', 'application/zip',
-          'application/x-zip-compressed', 'audio/mpeg', 'audio/wav', 'audio/ogg',
-          'application/json', 'image/png', 'image/jpeg'
-        ];
+        const { filename, size, type } = body;
+        if (!filename || typeof filename !== 'string') return new Response(JSON.stringify({ success: false, error: 'Missing filename' }), { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() } });
+        if (!size || typeof size !== 'number' || size <= 0) return new Response(JSON.stringify({ success: false, error: 'Invalid size' }), { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() } });
 
-        const formData = await request.formData();
-        const uploaded = [];
+        // Configurable max (default 5 GiB)
+        const MAX_BYTES = Number(env.MAX_UPLOAD_BYTES) || (5 * 1024 * 1024 * 1024);
+        if (size > MAX_BYTES) return new Response(JSON.stringify({ success: false, error: 'File too large' }), { status: 413, headers: { 'Content-Type': 'application/json', ...corsHeaders() } });
 
-        // Ensure an R2 binding is configured. Binding name: MLP_UPLOADS
-        if (!env.MLP_UPLOADS) {
-          return new Response(JSON.stringify({ success: false, error: 'R2 binding not configured' }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json', ...corsHeaders() }
-          });
+        // Ensure required env values for signing are present
+        const ACCOUNT_ID = env.R2_ACCOUNT_ID;
+        const BUCKET = env.R2_BUCKET_NAME; // set this as secret/var in wrangler
+        const ACCESS_KEY = env.R2_ACCESS_KEY_ID;
+        const SECRET_KEY = env.R2_SECRET_ACCESS_KEY;
+
+        if (!ACCOUNT_ID || !BUCKET || !ACCESS_KEY || !SECRET_KEY) {
+          return new Response(JSON.stringify({ success: false, error: 'R2 signing keys not configured' }), { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() } });
         }
 
-        for (const entry of formData.entries()) {
-          const [fieldName, value] = entry;
-          // file inputs appear as File/Blob objects
-          if (value instanceof File) {
-            const file = value;
-            // Basic validation
-            if (file.size === 0) {
-              return new Response(JSON.stringify({ success: false, error: 'Empty files are not allowed' }), {
-                status: 400,
-                headers: { 'Content-Type': 'application/json', ...corsHeaders() }
-              });
-            }
-            if (file.size > MAX_FILE_BYTES) {
-              return new Response(JSON.stringify({ success: false, error: 'File too large. Use signed uploads for large files.' }), {
-                status: 413,
-                headers: { 'Content-Type': 'application/json', ...corsHeaders() }
-              });
-            }
-            if (file.type && ALLOWED_TYPES.length && !ALLOWED_TYPES.some(t => file.type === t || (t.endsWith('/*') && file.type.startsWith(t.split('/')[0] + '/')))) {
-              // allow unknown types if not provided, but warn
-              return new Response(JSON.stringify({ success: false, error: 'File type not allowed: ' + file.type }), {
-                status: 415,
-                headers: { 'Content-Type': 'application/json', ...corsHeaders() }
-              });
-            }
+        // Generate a safe object key: uploads/<timestamp>-<uuid>-<sanitized>
+        const uuid = generateUUID();
+        const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 200);
+        const objectKey = `uploads/${Date.now()}-${uuid}-${safeName}`;
 
-            // Generate a safe object key. Do not honor client paths.
-            const randomHex = crypto.getRandomValues(new Uint8Array(8)).reduce((s, b) => s + b.toString(16).padStart(2, '0'), '');
-            const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 150);
-            const objectKey = `uploads/${Date.now()}-${randomHex}-${safeName}`;
+        // Generate a presigned PUT URL (AWS v4 style) for the R2 object
+        const expires = Math.min(60 * 60, Number(env.SIGNED_URL_EXPIRES) || 900); // default 15 minutes, cap 1 hour
+        const endpoint = `${ACCOUNT_ID}.r2.cloudflarestorage.com`;
+        const method = 'PUT';
+        const protocol = 'https://';
+        const host = endpoint;
+        const path = `/${BUCKET}/${encodeURIComponent(objectKey)}`;
 
-            // Store in R2. Use streaming when possible.
-            // Use file.stream() (supported in Workers) to avoid buffering large files in memory.
-            await env.MLP_UPLOADS.put(objectKey, file.stream(), {
-              httpMetadata: { contentType: file.type || 'application/octet-stream' },
-              customMetadata: {
-                originalName: file.name,
-                fieldName: fieldName
-              }
-            });
-
-            uploaded.push({ fieldName, originalName: file.name, size: file.size, contentType: file.type, objectKey });
-          }
-        }
-
-        return new Response(JSON.stringify({ success: true, uploaded }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders() }
+        const uploadUrl = await generatePresignedUrlV4({
+          accessKeyId: ACCESS_KEY,
+          secretAccessKey: SECRET_KEY,
+          region: 'auto',
+          service: 's3',
+          host,
+          method,
+          path,
+          expires,
+          payloadHash: 'UNSIGNED-PAYLOAD'
         });
+
+        return new Response(JSON.stringify({ success: true, uploadUrl: uploadUrl, objectKey }), { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() } });
       } catch (err) {
-        return new Response(JSON.stringify({ success: false, error: err.message }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders() }
-        });
+        return new Response(JSON.stringify({ success: false, error: String(err && err.message ? err.message : err) }), { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() } });
       }
     }
 
-    // If not matched, return 404 to avoid exposing other behavior.
     return new Response('Not Found', { status: 404, headers: corsHeaders() });
   }
 }
@@ -110,7 +82,116 @@ export default {
 function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'POST, PUT, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type'
   }
+}
+
+// Helper: generate a v4 presigned URL for R2 (S3-compatible). This implementation
+// follows AWS Signature Version 4 for presigning a PUT request. Keys are expected
+// to be provided to the Worker via environment variables (set securely in wrangler).
+async function generatePresignedUrlV4({ accessKeyId, secretAccessKey, region, service, host, method, path, expires, payloadHash }) {
+  // Dates
+  const now = new Date();
+  const amzDate = toAmzDate(now);
+  const dateStamp = amzDate.slice(0, 8);
+
+  const algorithm = 'AWS4-HMAC-SHA256';
+  const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
+
+  // Query params for presign
+  const params = new URLSearchParams();
+  params.set('X-Amz-Algorithm', algorithm);
+  params.set('X-Amz-Credential', `${accessKeyId}/${credentialScope}`);
+  params.set('X-Amz-Date', amzDate);
+  params.set('X-Amz-Expires', String(expires));
+  params.set('X-Amz-SignedHeaders', 'host');
+  params.set('X-Amz-Content-Sha256', payloadHash || 'UNSIGNED-PAYLOAD');
+
+  // Canonical request
+  const canonicalQuerystring = params.toString();
+  const canonicalHeaders = `host:${host}\n`;
+  const signedHeaders = 'host';
+  const canonicalRequest = [
+    method,
+    path,
+    canonicalQuerystring,
+    canonicalHeaders,
+    signedHeaders,
+    payloadHash || 'UNSIGNED-PAYLOAD'
+  ].join('\n');
+
+  const canonicalRequestHash = await sha256Hex(canonicalRequest);
+
+  const stringToSign = [
+    algorithm,
+    amzDate,
+    credentialScope,
+    canonicalRequestHash
+  ].join('\n');
+
+  // Compute signing key
+  const kDate = await hmac(`AWS4${secretAccessKey}`, dateStamp);
+  const kRegion = await hmacBinary(kDate, region);
+  const kService = await hmacBinary(kRegion, service);
+  const kSigning = await hmacBinary(kService, 'aws4_request');
+  const signature = await hmacHex(kSigning, stringToSign);
+
+  params.set('X-Amz-Signature', signature);
+
+  return `https://${host}${path}?${params.toString()}`;
+}
+
+// Utilities: HMAC and SHA256 helpers using Web Crypto
+function toAmzDate(d) {
+  const yyyy = d.getUTCFullYear();
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  const hh = String(d.getUTCHours()).padStart(2, '0');
+  const min = String(d.getUTCMinutes()).padStart(2, '0');
+  const ss = String(d.getUTCSeconds()).padStart(2, '0');
+  return `${yyyy}${mm}${dd}T${hh}${min}${ss}Z`;
+}
+
+async function sha256Hex(message) {
+  const msgUint8 = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+  return bufferToHex(hashBuffer);
+}
+
+async function hmac(key, msg) {
+  const enc = new TextEncoder();
+  const keyData = enc.encode(key);
+  const cryptoKey = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', cryptoKey, enc.encode(msg));
+  return new Uint8Array(sig);
+}
+
+async function hmacBinary(keyBytes, msg) {
+  const cryptoKey = await crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', cryptoKey, new TextEncoder().encode(msg));
+  return new Uint8Array(sig);
+}
+
+async function hmacHex(keyBytes, msg) {
+  const sig = await hmacBinary(keyBytes, msg);
+  return bufferToHex(sig.buffer);
+}
+
+function bufferToHex(buf) {
+  const bytes = new Uint8Array(buf);
+  let hex = '';
+  for (let i = 0; i < bytes.length; i++) {
+    hex += bytes[i].toString(16).padStart(2, '0');
+  }
+  return hex;
+}
+
+function generateUUID() {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  // Per RFC4122 v4
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20,32)}`;
 }

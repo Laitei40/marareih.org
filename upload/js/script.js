@@ -109,64 +109,91 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Upload sequence: sends all selected files + metadata to the Worker endpoint '/api/upload'
-  // Uses XMLHttpRequest for upload progress events. The Worker will validate and store files in R2.
-  function performUpload(files, metadata) {
-    return new Promise((resolve, reject) => {
-      const fd = new FormData();
-      files.forEach((f) => fd.append('file', f, f.name));
-      Object.keys(metadata || {}).forEach(k => { if (metadata[k]) fd.append(k, metadata[k]); });
+  // Upload sequence using signed PUT URLs from Worker
+  // Flow per file:
+  // 1) POST /api/upload/init { filename, size, type } -> { uploadUrl, objectKey }
+  // 2) PUT file bytes to uploadUrl (direct to R2)
+  // 3) Optionally, record completion server-side (not implemented here)
+  async function performUpload(files, metadata) {
+    // sequential upload to reduce concurrency & memory usage
+    const uploaded = [];
+    let totalBytes = files.reduce((s, f) => s + f.size, 0);
+    let totalUploaded = 0;
 
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/api/upload', true);
-      xhr.setRequestHeader('Accept', 'application/json');
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      progressStatus.textContent = `Preparing upload (${i+1}/${files.length})`;
 
-      xhr.upload.onprogress = function (e) {
-        if (e.lengthComputable) {
-          const percent = Math.round((e.loaded / e.total) * 100);
-          progressFill.style.width = percent + '%';
-          progressPercent.textContent = percent + '%';
-          progressBar.setAttribute('aria-valuenow', percent);
-          progressStatus.textContent = 'Uploading';
-        } else {
-          progressStatus.textContent = 'Uploading';
-        }
-      };
+      // Request signed URL
+      let initResp;
+      try {
+        initResp = await fetch('/api/upload/init', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ filename: file.name, size: file.size, type: file.type || 'application/octet-stream' })
+        });
+      } catch (err) {
+        throw { error: 'Network error requesting upload URL' };
+      }
 
-      xhr.onload = function () {
-        // Helpful handling for common failures (405 when testing via static server)
-        if (xhr.status === 405) {
-          progressStatus.textContent = 'Failed';
-          return reject({ error: 'Endpoint not available (405). Run the Cloudflare Worker / Pages Functions (wrangler dev) or deploy the Worker.' });
-        }
+      if (initResp.status === 413) throw { error: 'File too large' };
+      if (initResp.status === 400) {
+        const j = await initResp.json().catch(()=>({}));
+        throw { error: j && j.error ? j.error : 'Invalid upload init request' };
+      }
 
-        // Try to parse JSON response for success/failure details
-        let json = null;
-        try { json = JSON.parse(xhr.responseText || '{}'); } catch (err) { json = null; }
+      if (!initResp.ok) {
+        const j = await initResp.json().catch(()=>({}));
+        throw { error: j && j.error ? j.error : `Upload init failed (HTTP ${initResp.status})` };
+      }
 
-        if (xhr.status >= 200 && xhr.status < 300) {
-          if (json && json.success) {
-            progressFill.style.width = '100%';
-            progressPercent.textContent = '100%';
-            progressStatus.textContent = 'Completed';
-            return resolve(json);
+      const initJson = await initResp.json();
+      const uploadUrl = initJson.uploadUrl;
+      const objectKey = initJson.objectKey;
+      if (!uploadUrl) throw { error: 'No upload URL returned' };
+
+      // PUT file directly to R2 using XMLHttpRequest for progress events
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('PUT', uploadUrl, true);
+        // Let R2 accept the Content-Type header set by browser
+        if (file.type) xhr.setRequestHeader('Content-Type', file.type);
+
+        xhr.upload.onprogress = function (e) {
+          let filePercent = 0;
+          if (e.lengthComputable) filePercent = Math.round((e.loaded / e.total) * 100);
+          // total progress
+          const totalSoFar = totalUploaded + (e.loaded || 0);
+          const totalPercent = Math.round((totalSoFar / totalBytes) * 100);
+          progressFill.style.width = totalPercent + '%';
+          progressPercent.textContent = totalPercent + '%';
+          progressBar.setAttribute('aria-valuenow', totalPercent);
+          progressStatus.textContent = `Uploading ${file.name} — ${filePercent}%`;
+        };
+
+        xhr.onload = function () {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            // Completed this file
+            totalUploaded += file.size;
+            progressStatus.textContent = `Uploaded ${file.name}`;
+            uploaded.push({ originalName: file.name, size: file.size, objectKey });
+            resolve();
+          } else {
+            // Try to parse error
+            let json = null;
+            try { json = JSON.parse(xhr.responseText || '{}'); } catch (e) { json = null; }
+            reject({ error: (json && json.error) ? json.error : `Upload failed (HTTP ${xhr.status})` });
           }
-          // 2xx but no success flag -> treat as failure with details
-          progressStatus.textContent = 'Failed';
-          return reject(json || { error: 'Upload failed (no success flag)' });
-        }
+        };
 
-        // Non-2xx responses
-        progressStatus.textContent = 'Failed';
-        if (json && json.error) return reject(json);
-        return reject({ error: `Upload failed (HTTP ${xhr.status})` });
-      };
+        xhr.onerror = function () { reject({ error: 'Network error during file upload' }); };
+        xhr.onabort = function () { reject({ error: 'Upload aborted' }); };
 
-      xhr.onerror = function () { progressStatus.textContent = 'Network error'; reject({ error: 'Network error' }); };
-      xhr.onabort = function () { progressStatus.textContent = 'Aborted'; reject({ error: 'Upload aborted' }); };
+        xhr.send(file);
+      });
+    }
 
-      xhr.send(fd);
-    });
+    return { success: true, uploaded };
   }
 
   form.addEventListener('submit', async (e) => {
