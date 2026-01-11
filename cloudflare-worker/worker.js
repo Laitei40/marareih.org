@@ -11,6 +11,15 @@ export default {
     const url = new URL(request.url);
     const pathname = url.pathname || '/';
 
+    // If request looks like a static asset (css/js/images/fonts) or is under /upload/,
+    // forward it to origin so Cloudflare Pages / static hosting serves it with correct MIME type.
+    // This prevents the Worker from returning HTML for asset requests and causing MIME errors.
+    const staticExt = /\.(css|js|png|jpe?g|svg|ico|woff2?|ttf|eot)$/i;
+    if (pathname.startsWith('/upload/') || staticExt.test(pathname)) {
+      // Forward to origin (Pages/static host) to serve the file
+      return fetch(request);
+    }
+
     // POST /api/upload/init => return a signed PUT URL for direct-to-R2 uploads
     if (pathname === '/api/upload/init') {
       if (request.method !== 'POST') {
