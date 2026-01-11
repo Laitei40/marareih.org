@@ -4,38 +4,78 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>upload.marareih.org — Upload</title>
+  <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <main>
-    <h1>upload.marareih.org/upload</h1>
-    <p>This is the upload subsite for marareih.org.</p>
+  <main class="container" id="main">
+    <header class="site-header" data-loaded>
+      <div class="nav-row">
+        <a href="/" class="brand">
+          <img src="/assets/logo.svg" alt="Mara Language Preservation" class="brand-image" aria-hidden>
+          <span class="brand-text">Mara Language Preservation</span>
+        </a>
+      </div>
+    </header>
 
-    <!-- Google Form embed placeholder: replace FORM_URL below with your Google Form "share" link (embedded view) -->
-    <section class="google-form">
-      <h2>MLP Data Submission Form</h2>
-      <p>Please submit your data and website link using this form.<br>
-      teiteipara@gmail.com</p>
-      <p>The name, email, and photo associated with your Google account will be recorded when you upload files and submit this form.<br>
-      <em>* Indicates required question</em></p>
+    <section aria-labelledby="upload-title" class="content" data-anim>
+      <div class="cards">
+        <div class="card">
+          <h1 id="upload-title">Upload Files to Mara Language Preservation</h1>
+          <p class="lead">Share documents, audio, datasets, or other resources that support Mara language preservation. Please do not upload private or sensitive personal information without consent.</p>
 
-      <!-- Example embedded form URL (replace the URL with your form's Embed URL) -->
-      <iframe src="https://docs.google.com/forms/d/e/FORM_ID/viewform?embedded=true" width="640" height="800" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
+          <form class="upload-form" id="uploadForm" novalidate>
+            <div class="uploader-wrapper">
+              <label id="dropzoneLabel" for="fileInput" class="dropzone" tabindex="0" aria-describedby="dropzone-help">
+                <div class="dropzone-inner">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" aria-hidden focusable="false"><path d="M12 3v9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 10l5-7 5 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <strong>Drag & drop files here</strong>
+                  <span class="muted">or <button type="button" class="link-btn" id="browseBtn">choose files</button></span>
+                </div>
+                <input id="fileInput" name="files" type="file" multiple aria-labelledby="dropzoneLabel" aria-describedby="dropzone-help" />
+              </label>
+              <p id="dropzone-help" class="muted small">Accepted: documents, audio, datasets, images. Max single file size: 10 GB (subject to backend limits). We recommend compressed archives for large datasets.</p>
+            </div>
 
-      <p>If the form does not display, open it directly: <a href="https://docs.google.com/forms/d/e/FORM_ID/viewform" target="_blank" rel="noopener">Open MLP Data Submission Form</a></p>
+            <div id="fileList" class="file-list" aria-live="polite"></div>
 
-      <ul>
-        <li><strong>Your Full Name</strong> — *</li>
-        <li><strong>Type of Data Being Submitted</strong> — Document / Image / Video/Audio / Spreadsheet / Other (provide subtype)</li>
-        <li><strong>Data Upload</strong> — Upload 1 supported file. Max 10 GB.</li>
-        <li><strong>Website URL</strong> — Link to your website or related resource</li>
-        <li><strong>Brief Description</strong> — Description of the submitted data</li>
-      </ul>
+            <fieldset class="contact-form" aria-labelledby="metadata-legend">
+              <legend id="metadata-legend" class="alt">File metadata (optional)</legend>
 
-      <p>To enable this on your site: 1) Create a Google Form with the fields above; 2) click Send → Embed (<>), copy the iframe src or embed code; 3) replace the two occurrences of <code>FORM_ID</code> above with your form's ID or paste the full embed URL into the iframe <code>src</code>.</p>
+              <label for="category">Category</label>
+              <select id="category" name="category">
+                <option value="audio">Audio</option>
+                <option value="text">Text / Transcription</option>
+                <option value="dictionary">Dictionary</option>
+                <option value="dataset">Dataset</option>
+                <option value="documentation">Documentation</option>
+                <option value="other">Other</option>
+              </select>
+
+              <label for="description">Brief description or notes</label>
+              <textarea id="description" name="description" rows="3" placeholder="Describe the file's contents, language variety, speakers, license, or any access restrictions."></textarea>
+
+              <label for="contributor">Contributor name (optional)</label>
+              <input id="contributor" name="contributor" type="text" placeholder="Your name or community affiliation">
+            </fieldset>
+
+            <div class="actions" style="display:flex;gap:0.75rem;align-items:center;margin-top:1rem;flex-wrap:wrap;">
+              <button type="submit" id="uploadBtn" class="btn" disabled>Upload files</button>
+              <div id="progressWrap" class="progress-wrap" aria-hidden="true">
+                <progress id="uploadProgress" max="100" value="0"></progress>
+                <span id="progressText" class="meta small muted">Waiting to start</span>
+              </div>
+              <div class="meta alt" style="margin-left:auto;">Uploads go to Cloudflare R2 via signed URLs or Workers — no credentials are stored here.</div>
+            </div>
+
+            <div class="notice" style="margin-top:1rem;font-size:.95rem;">
+              <strong>Content guidance:</strong> Please only upload material you have the right to share. Avoid personal data or sensitive recordings without informed consent. Submissions may be reviewed by the MLP team.
+            </div>
+          </form>
+        </div>
+      </div>
     </section>
 
-    <p><strong>Note:</strong> This site does not accept direct file uploads here. Use the main MLP submission form which sends form data to Google Forms (file uploads are not supported from a public static form).</p>
   </main>
   <script src="js/script.js"></script>
 </body>
