@@ -1,0 +1,11 @@
+name = "calendar-api"
+main = "src/index.js"
+compatibility_date = "2026-01-11"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "calendar-db"
+database_id = "YOUR_D1_DATABASE_ID"  # Replace after: wrangler d1 create calendar-db
+
+# Authentication is handled by Cloudflare Access.
+# Configure an Access Application for the /admin path in the Cloudflare dashboard.

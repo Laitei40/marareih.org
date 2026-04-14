@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Mara Calendars — Mara Language Preservation</title>
+  <meta name="description" content="Subscribe to Mara community calendars. Church services, holidays, and community events — sync to Google Calendar, Apple Calendar, Outlook, or Teams.">
+  <meta name="keywords" content="Mara calendars, Mara events, church calendar, holiday calendar, subscribe ICS">
+  <meta name="author" content="Mara Language Preservation">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="Mara Calendars — Mara Language Preservation">
+  <meta property="og:description" content="Subscribe to Mara community calendars. Church services, holidays, and community events.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://marareih.org/calendars.html">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Mara Calendars — Mara Language Preservation">
+  <meta name="twitter:description" content="Subscribe to Mara community calendars. Church services, holidays, and community events.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script defer src="js/script.js"></script>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <style>
+    /* Calendar page specific styles */
+    .cal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem;margin-top:1.5rem}
+    .cal-card{background:var(--surface,#fff);border:1px solid var(--border,#e0e0e0);border-radius:12px;padding:1.5rem;transition:box-shadow .2s,transform .2s}
+    .cal-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);transform:translateY(-2px)}
+    .cal-card h3{font-size:1.15rem;margin-bottom:.25rem}
+    .cal-card .cal-desc{color:var(--text-muted,#6e6e73);font-size:.9rem;margin-bottom:1rem}
+    .cal-actions{display:flex;flex-wrap:wrap;gap:.5rem}
+    .cal-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--border,#e0e0e0);border-radius:8px;background:var(--surface,#fff);color:var(--text,#1d1d1f);font-size:13px;text-decoration:none;cursor:pointer;transition:all .15s;font-family:inherit}
+    .cal-btn:hover{background:var(--bg,#f5f5f7);text-decoration:none}
+    .cal-btn svg{width:16px;height:16px;flex-shrink:0}
+    .cal-btn--primary{background:var(--accent,#0071e3);color:#fff;border-color:var(--accent,#0071e3)}
+    .cal-btn--primary:hover{opacity:.9;background:var(--accent,#0071e3)}
+    .events-toggle{margin-top:1rem;font-size:13px;color:var(--accent,#0071e3);cursor:pointer;background:none;border:none;padding:0;font-family:inherit}
+    .events-toggle:hover{text-decoration:underline}
+    .events-panel{display:none;margin-top:1rem;border-top:1px solid var(--border,#e0e0e0);padding-top:1rem}
+    .events-panel.open{display:block}
+    .evt-item{padding:10px 0;border-bottom:1px solid var(--border,#e0e0e0)}
+    .evt-item:last-child{border-bottom:none}
+    .evt-item h4{font-size:.95rem;font-weight:500;margin-bottom:2px}
+    .evt-meta{font-size:.8rem;color:var(--text-muted,#6e6e73)}
+    .evt-meta span{margin-right:10px}
+    .loading{text-align:center;padding:3rem;color:var(--text-muted,#6e6e73)}
+    .no-cals{text-align:center;padding:3rem;color:var(--text-muted,#6e6e73)}
+    .webcal-note{margin-top:2rem;padding:1rem 1.25rem;background:var(--bg,#f5f5f7);border-radius:10px;font-size:.85rem;color:var(--text-muted,#6e6e73);line-height:1.6}
+    .webcal-note strong{color:var(--text,#1d1d1f)}
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container nav-row">
+      <a class="brand" href="index.html" aria-label="Mara Language Preservation homepage">
+        <img src="assets/logo.svg" class="brand-image" width="36" height="36" alt="Mara Language Preservation logo">
+        <span class="brand-text">MLP Projects</span>
+      </a>
+      <nav class="primary-nav">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="projects.html">Projects</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="container content" data-anim="fade-up">
+      <h1>Mara Calendars</h1>
+      <p class="lead">Subscribe to community calendars for church services, holidays, and events. Calendars sync automatically with your favorite apps.</p>
+
+      <div id="calendars-loading" class="loading">Loading calendars…</div>
+      <div id="calendars-empty" class="no-cals" style="display:none">No calendars published yet. Check back soon!</div>
+      <div id="calendars-grid" class="cal-grid"></div>
+
+      <div class="webcal-note" data-anim="fade-up">
+        <strong>How it works:</strong> Click <em>Subscribe</em> to add a live-updating calendar to your app. Events added by the community will appear automatically. Or click <em>Download .ics</em> for a one-time import. Works with Google Calendar, Apple Calendar, Outlook, Microsoft Teams, and any app that supports ICS feeds.
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer site-footer--mlp" role="contentinfo">
+    <div class="footer-top">
+      <div class="container footer-columns">
+        <div>
+          <h3>About MLP</h3>
+          <ul>
+            <li><a href="about.html">About Mara Language Preservation</a></li>
+            <li><a href="mission.html">Mission &amp; Vision</a></li>
+            <li><a href="community.html">Community &amp; Contributors</a></li>
+            <li><a href="community.html">Language &amp; Culture</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Resources</h3>
+          <ul>
+            <li><a href="https://dic.marareih.org/" target="_blank" rel="noopener">Mara Dictionary</a></li>
+            <li><a href="grammar.html">Mara Grammar</a></li>
+            <li><a href="keyboard-fonts.html">Mara Keyboard &amp; Fonts</a></li>
+            <li><a href="datasets.html">Datasets &amp; Downloads</a></li>
+            <li><a href="documentation.html">Documentation</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Projects &amp; Updates</h3>
+          <ul>
+            <li><a href="projects.html">MLP Projects</a></li>
+            <li><a href="updates.html">Change Log / Updates</a></li>
+            <li><a href="documentation.html">Digital Tools</a></li>
+            <li><a href="feedback.html">Submit Feedback</a></li>
+            <li><a href="calendars.html">Mara Calendars</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Contact &amp; Legal</h3>
+          <ul>
+            <li><a href="contact.html">Contact Us</a></li>
+            <li><a href="privacy-policy.html">Privacy Policy</a></li>
+            <li><a href="terms-of-use.html">Terms of Use</a></li>
+            <li><a href="external-links-disclaimer.html">External Links Disclaimer</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="container footer-bottom-row">
+        <div>&copy; 2026 Mara Language Preservation (MLP)</div>
+        <div><a href="terms-of-use.html">Terms of Use</a> | <a href="privacy-policy.html">Privacy Policy</a> | <a href="external-links-disclaimer.html">External Links Disclaimer</a></div>
+      </div>
+    </div>
+  </footer>
+
+<script>
+(function () {
+  'use strict';
+
+  // ── Config ──
+  // Base URL of the calendar-worker API
+  const API = 'https://calendar-api.marareih.org';
+
+  // ── SVG icons ──
+  const ICONS = {
+    subscribe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="20" r="1"/></svg>',
+    download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+    google: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.5 3h-15A1.5 1.5 0 003 4.5v15A1.5 1.5 0 004.5 21h15a1.5 1.5 0 001.5-1.5v-15A1.5 1.5 0 0019.5 3zM17 13h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>',
+    outlook: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.5 3h-19A1.5 1.5 0 001 4.5v15A1.5 1.5 0 002.5 21h19a1.5 1.5 0 001.5-1.5v-15A1.5 1.5 0 0021.5 3zM12 17.5c-3.04 0-5.5-2.46-5.5-5.5S8.96 6.5 12 6.5s5.5 2.46 5.5 5.5-2.46 5.5-5.5 5.5zm0-9a3.5 3.5 0 100 7 3.5 3.5 0 000-7z"/></svg>',
+    events: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
+  };
+
+  // ── Elements ──
+  const grid = document.getElementById('calendars-grid');
+  const loading = document.getElementById('calendars-loading');
+  const empty = document.getElementById('calendars-empty');
+
+  // ── Load calendars ──
+  document.addEventListener('DOMContentLoaded', loadCalendars);
+
+  async function loadCalendars() {
+    try {
+      const res = await fetch(API + '/api/calendars');
+      if (!res.ok) throw new Error('Failed to load calendars');
+      const data = await res.json();
+      const calendars = data.calendars || [];
+      loading.style.display = 'none';
+
+      if (!calendars.length) {
+        empty.style.display = '';
+        return;
+      }
+
+      for (const cal of calendars) {
+        grid.appendChild(buildCalCard(cal));
+      }
+    } catch (err) {
+      loading.textContent = 'Unable to load calendars. Please try again later.';
+      console.error(err);
+    }
+  }
+
+  // ── Build calendar card ──
+  function buildCalCard(cal) {
+    const icsUrl = API + '/api/calendar/' + encodeURIComponent(cal.slug) + '.ics';
+    const webcalUrl = icsUrl.replace(/^https?:/, 'webcal:');
+    const googleUrl = 'https://www.google.com/calendar/render?cid=' + encodeURIComponent(webcalUrl);
+    const outlookUrl = 'https://outlook.live.com/calendar/0/addfromweb?url=' + encodeURIComponent(icsUrl) + '&name=' + encodeURIComponent(cal.name);
+
+    const card = document.createElement('div');
+    card.className = 'cal-card';
+    card.setAttribute('data-anim', 'fade-up');
+
+    card.innerHTML =
+      '<h3>' + esc(cal.name) + '</h3>' +
+      (cal.description ? '<p class="cal-desc">' + esc(cal.description) + '</p>' : '') +
+      '<div class="cal-actions">' +
+        '<a class="cal-btn cal-btn--primary" href="' + attr(webcalUrl) + '" title="Subscribe in your default calendar app">' + ICONS.subscribe + ' Subscribe</a>' +
+        '<a class="cal-btn" href="' + attr(icsUrl) + '" download="' + attr(cal.slug) + '.ics" title="Download .ics file">' + ICONS.download + ' Download .ics</a>' +
+        '<a class="cal-btn" href="' + attr(googleUrl) + '" target="_blank" rel="noopener" title="Add to Google Calendar">' + ICONS.google + ' Google</a>' +
+        '<a class="cal-btn" href="' + attr(outlookUrl) + '" target="_blank" rel="noopener" title="Add to Outlook / Teams">' + ICONS.outlook + ' Outlook</a>' +
+      '</div>' +
+      '<button class="events-toggle" data-cal-id="' + cal.id + '">' + ICONS.events + ' Show upcoming events</button>' +
+      '<div class="events-panel" id="events-' + cal.id + '"></div>';
+
+    card.querySelector('.events-toggle').addEventListener('click', function () {
+      toggleEvents(cal.id, this);
+    });
+
+    return card;
+  }
+
+  // ── Toggle events panel ──
+  async function toggleEvents(calId, btn) {
+    const panel = document.getElementById('events-' + calId);
+    if (panel.classList.contains('open')) {
+      panel.classList.remove('open');
+      btn.innerHTML = ICONS.events + ' Show upcoming events';
+      return;
+    }
+
+    // Load events if not already loaded
+    if (!panel.dataset.loaded) {
+      panel.innerHTML = '<p class="evt-meta">Loading events…</p>';
+      panel.classList.add('open');
+      try {
+        const res = await fetch(API + '/api/calendars/' + calId + '/events');
+        if (!res.ok) throw new Error('Failed');
+        const data = await res.json();
+        const events = (data.events || []).filter(function (ev) {
+          return new Date(ev.end_datetime) >= new Date();
+        });
+
+        if (!events.length) {
+          panel.innerHTML = '<p class="evt-meta">No upcoming events.</p>';
+        } else {
+          panel.innerHTML = events.map(function (ev) {
+            var start = ev.all_day ? fmtDate(ev.start_datetime) : fmtDateTime(ev.start_datetime);
+            var end = ev.all_day ? fmtDate(ev.end_datetime) : fmtDateTime(ev.end_datetime);
+            return '<div class="evt-item">' +
+              '<h4>' + esc(ev.title) + '</h4>' +
+              '<div class="evt-meta">' +
+                '<span>📅 ' + start + ' — ' + end + '</span>' +
+                (ev.location ? '<span>📍 ' + esc(ev.location) + '</span>' : '') +
+                (ev.all_day ? '<span>☀️ All day</span>' : '') +
+                (ev.recurrence ? '<span>🔁 Recurring</span>' : '') +
+              '</div>' +
+              (ev.description ? '<p class="evt-meta" style="margin-top:4px">' + esc(ev.description) + '</p>' : '') +
+            '</div>';
+          }).join('');
+        }
+        panel.dataset.loaded = '1';
+      } catch (e) {
+        panel.innerHTML = '<p class="evt-meta">Could not load events.</p>';
+      }
+    } else {
+      panel.classList.add('open');
+    }
+    btn.innerHTML = ICONS.events + ' Hide events';
+  }
+
+  // ── Helpers ──
+  function esc(s) {
+    var d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
+  }
+  function attr(s) {
+    return esc(s).replace(/"/g, '&quot;');
+  }
+  function fmtDateTime(dt) {
+    return new Date(dt).toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+  function fmtDate(dt) {
+    return new Date(dt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+})();
+</script>
+</body>
+</html>
