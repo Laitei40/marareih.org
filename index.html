@@ -136,6 +136,16 @@
         </article>
       </div>
     </section>
+
+    <section class="container" aria-label="Latest Updates" style="padding-bottom:2.5rem">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1rem">
+        <h2 style="margin:0">Latest Updates</h2>
+        <a href="updates.html" style="font-size:.9rem;color:var(--accent,#0071e3);text-decoration:none">View all →</a>
+      </div>
+      <div id="home-updates" class="grid" style="gap:1.25rem">
+        <p id="home-updates-loading" style="color:var(--text-muted,#6e6e73)">Loading updates…</p>
+      </div>
+    </section>
   </main>
 
     <!-- Footer CTA: link to separate feedback page -->
@@ -203,5 +213,41 @@
       </div>
     </div>
   </footer>
+
+<script>
+(function(){
+  var API='https://calendar-api.teiteipara.workers.dev';
+  var wrap=document.getElementById('home-updates');
+  var loader=document.getElementById('home-updates-loading');
+  if(!wrap)return;
+
+  fetch(API+'/api/updates?limit=3')
+    .then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})
+    .then(function(data){
+      var items=data.updates||[];
+      loader.remove();
+      if(!items.length){wrap.innerHTML='<p style="color:var(--text-muted,#6e6e73)">No updates yet.</p>';return;}
+      items.forEach(function(u){
+        var card=document.createElement('article');
+        card.className='feature';
+        card.style.cursor='pointer';
+        card.onclick=function(){window.location.href='updates.html';};
+        var badge=u.category&&u.category!=='general'
+          ?'<span style="display:inline-block;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:6px;background:rgba(6,182,164,.12);color:var(--accent,#06b6a4);margin-bottom:.35rem">'+esc(u.category)+'</span><br>':'';
+        var pin=u.pinned?'<span style="font-size:.75rem;margin-left:6px" title="Pinned">📌</span>':'';
+        var date=u.published_at?new Date(u.published_at).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}):'';
+        card.innerHTML=badge+'<h3 style="margin-bottom:.25rem">'+esc(u.title)+pin+'</h3>'
+          +(date?'<time style="font-size:.78rem;color:var(--text-muted,#6e6e73)">'+date+'</time>':'')
+          +(u.summary?'<p style="margin-top:.4rem;font-size:.88rem">'+esc(u.summary)+'</p>':'');
+        wrap.appendChild(card);
+      });
+    })
+    .catch(function(){
+      loader.textContent='Unable to load updates.';
+    });
+
+  function esc(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+})();
+</script>
 </body>
 </html>
