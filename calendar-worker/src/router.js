@@ -19,14 +19,14 @@ export async function handleRequest(request, env, ctx) {
       return handleIcs(request, env, path);
     }
 
+    // Event CRUD (must be checked before calendar CRUD)
+    if (path.startsWith('/api/events') || path.match(/^\/api\/calendars\/\d+\/events/)) {
+      return handleEvents(request, env, path);
+    }
+
     // Calendar CRUD
     if (path.startsWith('/api/calendars')) {
       return handleCalendars(request, env, path);
-    }
-
-    // Event CRUD
-    if (path.startsWith('/api/events') || path.match(/^\/api\/calendars\/\d+\/events/)) {
-      return handleEvents(request, env, path);
     }
 
     // Admin dashboard (protected by Cloudflare Access)

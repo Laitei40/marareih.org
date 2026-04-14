@@ -80,7 +80,7 @@ export function getAdminHtml() {
       </div>
       <div class="form-group">
         <label for="cal-slug">Slug (URL)</label>
-        <input type="text" id="cal-slug" required placeholder="e.g. church" pattern="[a-z0-9-]+">
+        <input type="text" id="cal-slug" required placeholder="e.g. church" pattern="[a-z0-9\-]+">
         <small class="text-muted">Lowercase letters, numbers, and hyphens only</small>
       </div>
       <div class="form-group">
@@ -129,22 +129,6 @@ export function getAdminHtml() {
           <label for="evt-tz">Timezone</label>
           <select id="evt-tz">
             <option value="UTC">UTC</option>
-            <option value="America/New_York">America/New_York</option>
-            <option value="America/Chicago">America/Chicago</option>
-            <option value="America/Denver">America/Denver</option>
-            <option value="America/Los_Angeles">America/Los_Angeles</option>
-            <option value="Europe/London">Europe/London</option>
-            <option value="Europe/Berlin">Europe/Berlin</option>
-            <option value="Europe/Paris">Europe/Paris</option>
-            <option value="Asia/Tokyo">Asia/Tokyo</option>
-            <option value="Asia/Shanghai">Asia/Shanghai</option>
-            <option value="Asia/Dubai">Asia/Dubai</option>
-            <option value="Asia/Kolkata">Asia/Kolkata</option>
-            <option value="Africa/Nairobi">Africa/Nairobi</option>
-            <option value="Africa/Lagos">Africa/Lagos</option>
-            <option value="Africa/Cairo">Africa/Cairo</option>
-            <option value="Pacific/Auckland">Pacific/Auckland</option>
-            <option value="Australia/Sydney">Australia/Sydney</option>
           </select>
         </div>
       </div>
@@ -334,8 +318,44 @@ function getJS() {
   document.addEventListener('DOMContentLoaded', init);
 
   function init() {
+    populateTimezones();
     bindEvents();
     loadCalendars();
+  }
+
+  function populateTimezones() {
+    const sel = $('#evt-tz');
+    try {
+      const tzList = Intl.supportedValuesOf('timeZone');
+      tzList.forEach(tz => {
+        const opt = document.createElement('option');
+        opt.value = tz;
+        opt.textContent = tz;
+        sel.appendChild(opt);
+      });
+    } catch (e) {
+      // Fallback for older runtimes
+      const fallback = [
+        'America/New_York','America/Chicago','America/Denver','America/Los_Angeles',
+        'America/Anchorage','America/Sao_Paulo','America/Argentina/Buenos_Aires',
+        'America/Mexico_City','America/Toronto','America/Vancouver',
+        'Europe/London','Europe/Berlin','Europe/Paris','Europe/Madrid','Europe/Rome',
+        'Europe/Moscow','Europe/Istanbul','Europe/Athens','Europe/Warsaw',
+        'Asia/Tokyo','Asia/Shanghai','Asia/Hong_Kong','Asia/Seoul','Asia/Singapore',
+        'Asia/Dubai','Asia/Kolkata','Asia/Bangkok','Asia/Jakarta','Asia/Karachi',
+        'Asia/Taipei','Asia/Manila','Asia/Dhaka','Asia/Yangon',
+        'Africa/Nairobi','Africa/Lagos','Africa/Cairo','Africa/Johannesburg',
+        'Africa/Casablanca','Africa/Addis_Ababa',
+        'Pacific/Auckland','Pacific/Fiji','Pacific/Honolulu','Pacific/Guam',
+        'Australia/Sydney','Australia/Melbourne','Australia/Perth'
+      ];
+      fallback.forEach(tz => {
+        const opt = document.createElement('option');
+        opt.value = tz;
+        opt.textContent = tz;
+        sel.appendChild(opt);
+      });
+    }
   }
 
   function bindEvents() {
