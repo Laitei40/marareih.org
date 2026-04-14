@@ -5,7 +5,7 @@ compatibility_date = "2026-01-11"
 [[d1_databases]]
 binding = "DB"
 database_name = "calendar-db"
-database_id = "YOUR_D1_DATABASE_ID"  # Replace after: wrangler d1 create calendar-db
+database_id = "cfb8b988-5db9-4319-81ac-3239852b6e7c"
 
 # Authentication is handled by Cloudflare Access.
 # Configure an Access Application for the /admin path in the Cloudflare dashboard.
