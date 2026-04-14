@@ -33,24 +33,34 @@
 
   <main id="main">
     <section class="container content">
-      <h1>Project Updates</h1>
-      <p class="lead">Recent changes, project milestones, and announcements from MLP.</p>
+      <!-- List view -->
+      <div id="updates-list-view">
+        <h1>Project Updates</h1>
+        <p class="lead">Recent changes, project milestones, and announcements from MLP.</p>
 
-      <!-- Category filter -->
-      <div class="updates-filter" style="margin-bottom:24px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <button class="filter-btn active" data-cat="">All</button>
-        <button class="filter-btn" data-cat="general">General</button>
-        <button class="filter-btn" data-cat="release">Release</button>
-        <button class="filter-btn" data-cat="announcement">Announcement</button>
-        <button class="filter-btn" data-cat="milestone">Milestone</button>
-        <button class="filter-btn" data-cat="community">Community</button>
+        <!-- Category filter -->
+        <div class="updates-filter" style="margin-bottom:24px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="filter-btn active" data-cat="">All</button>
+          <button class="filter-btn" data-cat="general">General</button>
+          <button class="filter-btn" data-cat="release">Release</button>
+          <button class="filter-btn" data-cat="announcement">Announcement</button>
+          <button class="filter-btn" data-cat="milestone">Milestone</button>
+          <button class="filter-btn" data-cat="community">Community</button>
+        </div>
+
+        <div id="updates-loading" style="text-align:center;padding:40px;color:var(--muted)">Loading updates…</div>
+        <div id="updates-empty" style="display:none;text-align:center;padding:40px;color:var(--muted)">No updates yet. Check back soon!</div>
+        <div id="updates-list"></div>
+        <div id="updates-more" style="display:none;text-align:center;margin-top:24px">
+          <button id="load-more-btn">Load More</button>
+        </div>
       </div>
 
-      <div id="updates-loading" style="text-align:center;padding:40px;color:var(--muted)">Loading updates…</div>
-      <div id="updates-empty" style="display:none;text-align:center;padding:40px;color:var(--muted)">No updates yet. Check back soon!</div>
-      <div id="updates-list"></div>
-      <div id="updates-more" style="display:none;text-align:center;margin-top:24px">
-        <button id="load-more-btn">Load More</button>
+      <!-- Single article view -->
+      <div id="updates-article-view" style="display:none">
+        <button id="back-to-list" class="back-btn">← All Updates</button>
+        <div id="article-loading" style="text-align:center;padding:40px;color:var(--muted)">Loading article…</div>
+        <article id="article-content" class="article-full" style="display:none"></article>
       </div>
     </section>
   </main>
@@ -73,10 +83,25 @@
     .update-card .content a{color:var(--accent-2)}
     #load-more-btn{padding:10px 28px;border-radius:8px;border:none;font-size:15px;cursor:pointer;color:#022;background:linear-gradient(135deg,var(--accent),var(--accent-2));font-weight:600;font-family:inherit;transition:all .25s cubic-bezier(.2,.9,.3,1);box-shadow:0 3px 12px rgba(6,182,164,.15)}
     #load-more-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(6,182,164,.25)}
-    .update-card .content{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.2,.9,.3,1),opacity .3s;opacity:0}
-    .update-card .content.expanded{max-height:2000px;opacity:1;margin-top:12px}
     .read-more-btn{background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;font-family:inherit;padding:6px 0;transition:color .2s}
     .read-more-btn:hover{color:var(--accent-2)}
+    /* Article view */
+    .back-btn{background:none;border:none;color:var(--accent);cursor:pointer;font-size:14px;font-family:inherit;padding:6px 0;margin-bottom:16px;display:inline-flex;align-items:center;gap:4px;transition:color .2s}
+    .back-btn:hover{color:var(--accent-2)}
+    .article-full{background:var(--card);border:1px solid var(--glass);border-radius:16px;padding:32px;opacity:0;transform:translateY(14px);animation:updateIn .45s cubic-bezier(.2,.9,.3,1) forwards}
+    .article-full h1{font-size:1.6rem;margin-bottom:8px;color:var(--text)}
+    .article-full .article-meta{font-size:13px;color:var(--muted);margin-bottom:16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .article-full .article-body{line-height:1.8;color:var(--text);font-size:15px}
+    .article-full .article-body a{color:var(--accent-2)}
+    .article-full .article-summary{color:var(--muted);font-size:15px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--glass);font-style:italic}
+    .share-bar{margin-top:24px;padding-top:16px;border-top:1px solid var(--glass);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .share-bar span{font-size:13px;color:var(--muted);font-weight:600}
+    .share-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border:1px solid var(--glass);border-radius:8px;background:var(--card);color:var(--text);font-size:12px;cursor:pointer;transition:all .2s;font-family:inherit}
+    .share-btn:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+    .share-btn.copied{background:rgba(6,182,164,.1);border-color:var(--accent);color:var(--accent)}
+    /* Card title links */
+    .update-card h2 a{color:var(--text);text-decoration:none;transition:color .2s}
+    .update-card h2 a:hover{color:var(--accent)}
   </style>
 
   <script>
@@ -86,8 +111,16 @@
     var currentPage = 1;
     var pageSize = 10;
 
+    // View elements
+    var listView = document.getElementById('updates-list-view');
+    var articleView = document.getElementById('updates-article-view');
+
     document.addEventListener('DOMContentLoaded', function() {
-      loadUpdates();
+      // Route based on hash
+      handleRoute();
+      window.addEventListener('hashchange', handleRoute);
+
+      // Filter buttons
       document.querySelectorAll('.filter-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
           document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
@@ -98,11 +131,99 @@
           loadUpdates();
         });
       });
+
+      // Load more
       document.getElementById('load-more-btn').addEventListener('click', function() {
         currentPage++;
         loadUpdates(true);
       });
+
+      // Back button
+      document.getElementById('back-to-list').addEventListener('click', function() {
+        history.pushState(null, '', 'updates.html');
+        showList();
+      });
     });
+
+    function handleRoute() {
+      var hash = window.location.hash.slice(1);
+      if (hash) {
+        showArticle(hash);
+      } else {
+        showList();
+      }
+    }
+
+    function showList() {
+      listView.style.display = '';
+      articleView.style.display = 'none';
+      document.title = 'Updates — Mara Language Preservation';
+      if (!document.getElementById('updates-list').children.length) {
+        loadUpdates();
+      }
+    }
+
+    function showArticle(slug) {
+      listView.style.display = 'none';
+      articleView.style.display = '';
+      var loading = document.getElementById('article-loading');
+      var content = document.getElementById('article-content');
+      loading.style.display = '';
+      content.style.display = 'none';
+
+      fetch(API + '/api/updates/' + encodeURIComponent(slug))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data.update) {
+            loading.textContent = 'Article not found.';
+            return;
+          }
+          var u = data.update;
+          loading.style.display = 'none';
+          content.style.display = '';
+          // Force re-trigger animation
+          content.style.animation = 'none';
+          content.offsetHeight;
+          content.style.animation = '';
+
+          document.title = u.title + ' — MLP Updates';
+
+          var date = new Date(u.published_at || u.created_at).toLocaleDateString(undefined, { year:'numeric', month:'long', day:'numeric' });
+          var pinHtml = u.pinned ? ' <span class="pin-badge" style="color:#e69500;font-size:12px">📌 Pinned</span>' : '';
+          var shareUrl = window.location.origin + window.location.pathname + '#' + u.slug;
+
+          content.innerHTML =
+            '<h1>' + esc(u.title) + '</h1>' +
+            '<div class="article-meta">' +
+              '<span>' + date + '</span>' +
+              '<span class="cat-badge">' + esc(u.category) + '</span>' +
+              pinHtml +
+            '</div>' +
+            (u.summary ? '<p class="article-summary">' + esc(u.summary) + '</p>' : '') +
+            '<div class="article-body">' + (u.content || '') + '</div>' +
+            '<div class="share-bar">' +
+              '<span>Share:</span>' +
+              '<button class="share-btn" id="copy-link-btn" title="Copy link">📋 Copy Link</button>' +
+              '<a class="share-btn" href="https://twitter.com/intent/tweet?text=' + encodeURIComponent(u.title) + '&url=' + encodeURIComponent(shareUrl) + '" target="_blank" rel="noopener" title="Share on X">𝕏 Post</a>' +
+              '<a class="share-btn" href="https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl) + '" target="_blank" rel="noopener" title="Share on Facebook">f Share</a>' +
+              '<a class="share-btn" href="mailto:?subject=' + encodeURIComponent(u.title + ' — MLP Updates') + '&body=' + encodeURIComponent(u.title + '\n\n' + shareUrl) + '" title="Share via email">✉ Email</a>' +
+            '</div>';
+
+          document.getElementById('copy-link-btn').addEventListener('click', function() {
+            var self = this;
+            navigator.clipboard.writeText(shareUrl).then(function() {
+              self.classList.add('copied');
+              self.textContent = '✓ Copied!';
+              setTimeout(function() { self.classList.remove('copied'); self.textContent = '📋 Copy Link'; }, 2000);
+            });
+          });
+
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        })
+        .catch(function() {
+          loading.textContent = 'Unable to load article. Please try again later.';
+        });
+    }
 
     function loadUpdates(append) {
       var loading = document.getElementById('updates-loading');
@@ -135,26 +256,15 @@
             var date = new Date(u.published_at || u.created_at).toLocaleDateString(undefined, { year:'numeric', month:'long', day:'numeric' });
             var pinHtml = u.pinned ? ' <span class="pin-badge">📌 Pinned</span>' : '';
 
-            var hasContent = u.content && u.content.trim();
             card.innerHTML =
-              '<h2>' + esc(u.title) + '</h2>' +
+              '<h2><a href="#' + esc(u.slug) + '">' + esc(u.title) + '</a></h2>' +
               '<div class="meta">' +
                 '<span>' + date + '</span>' +
                 '<span class="cat-badge">' + esc(u.category) + '</span>' +
                 pinHtml +
               '</div>' +
               (u.summary ? '<p class="summary">' + esc(u.summary) + '</p>' : '') +
-              (hasContent ? '<button class="read-more-btn">Read more ▾</button>' +
-              '<div class="content">' + u.content + '</div>' : '');
-
-            if (hasContent) {
-              var btn = card.querySelector('.read-more-btn');
-              var contentEl = card.querySelector('.content');
-              btn.addEventListener('click', function() {
-                var open = contentEl.classList.toggle('expanded');
-                btn.textContent = open ? 'Show less ▴' : 'Read more ▾';
-              });
-            }
+              '<a href="#' + esc(u.slug) + '" class="read-more-btn">Read more →</a>';
             list.appendChild(card);
           });
 
