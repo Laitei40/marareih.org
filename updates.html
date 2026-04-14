@@ -94,11 +94,12 @@
     .article-full .article-body{line-height:1.8;color:var(--text);font-size:15px}
     .article-full .article-body a{color:var(--accent-2)}
     .article-full .article-summary{color:var(--muted);font-size:15px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--glass);font-style:italic}
-    .share-bar{margin-top:24px;padding-top:16px;border-top:1px solid var(--glass);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .share-bar span{font-size:13px;color:var(--muted);font-weight:600}
-    .share-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border:1px solid var(--glass);border-radius:8px;background:var(--card);color:var(--text);font-size:12px;cursor:pointer;transition:all .2s;font-family:inherit}
-    .share-btn:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
-    .share-btn.copied{background:rgba(6,182,164,.1);border-color:var(--accent);color:var(--accent)}
+    .share-bar{margin-top:24px;padding-top:16px;border-top:1px solid var(--glass);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .share-bar .share-label{font-size:13px;color:var(--muted);font-weight:600;margin-right:4px}
+    .share-btn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid var(--glass);border-radius:50%;background:var(--card);color:var(--text);cursor:pointer;transition:all .25s cubic-bezier(.2,.9,.3,1);text-decoration:none;padding:0}
+    .share-btn svg{width:18px;height:18px}
+    .share-btn:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 12px rgba(6,182,164,.15)}
+    .share-btn.copied{background:rgba(6,182,164,.15);border-color:var(--accent);color:var(--accent)}
     /* Card title links */
     .update-card h2 a{color:var(--text);text-decoration:none;transition:color .2s}
     .update-card h2 a:hover{color:var(--accent)}
@@ -202,19 +203,19 @@
             (u.summary ? '<p class="article-summary">' + esc(u.summary) + '</p>' : '') +
             '<div class="article-body">' + (u.content || '') + '</div>' +
             '<div class="share-bar">' +
-              '<span>Share:</span>' +
-              '<button class="share-btn" id="copy-link-btn" title="Copy link">📋 Copy Link</button>' +
-              '<a class="share-btn" href="https://twitter.com/intent/tweet?text=' + encodeURIComponent(u.title) + '&url=' + encodeURIComponent(shareUrl) + '" target="_blank" rel="noopener" title="Share on X">𝕏 Post</a>' +
-              '<a class="share-btn" href="https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl) + '" target="_blank" rel="noopener" title="Share on Facebook">f Share</a>' +
-              '<a class="share-btn" href="mailto:?subject=' + encodeURIComponent(u.title + ' — MLP Updates') + '&body=' + encodeURIComponent(u.title + '\n\n' + shareUrl) + '" title="Share via email">✉ Email</a>' +
+              '<span class="share-label">Share:</span>' +
+              '<button class="share-btn" id="copy-link-btn" title="Copy link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>' +
+              '<a class="share-btn" href="https://twitter.com/intent/tweet?text=' + encodeURIComponent(u.title) + '&url=' + encodeURIComponent(shareUrl) + '" target="_blank" rel="noopener" title="Share on X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>' +
+              '<a class="share-btn" href="https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl) + '" target="_blank" rel="noopener" title="Share on Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>' +
+              '<a class="share-btn" href="mailto:?subject=' + encodeURIComponent(u.title + ' — MLP Updates') + '&body=' + encodeURIComponent(u.title + '\n\n' + shareUrl) + '" title="Share via email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></a>' +
             '</div>';
 
           document.getElementById('copy-link-btn').addEventListener('click', function() {
             var self = this;
             navigator.clipboard.writeText(shareUrl).then(function() {
               self.classList.add('copied');
-              self.textContent = '✓ Copied!';
-              setTimeout(function() { self.classList.remove('copied'); self.textContent = '📋 Copy Link'; }, 2000);
+              self.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+              setTimeout(function() { self.classList.remove('copied'); self.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>'; }, 2000);
             });
           });
 
