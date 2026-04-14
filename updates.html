@@ -73,6 +73,10 @@
     .update-card .content a{color:var(--accent-2)}
     #load-more-btn{padding:10px 28px;border-radius:8px;border:none;font-size:15px;cursor:pointer;color:#022;background:linear-gradient(135deg,var(--accent),var(--accent-2));font-weight:600;font-family:inherit;transition:all .25s cubic-bezier(.2,.9,.3,1);box-shadow:0 3px 12px rgba(6,182,164,.15)}
     #load-more-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(6,182,164,.25)}
+    .update-card .content{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.2,.9,.3,1),opacity .3s;opacity:0}
+    .update-card .content.expanded{max-height:2000px;opacity:1;margin-top:12px}
+    .read-more-btn{background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;font-family:inherit;padding:6px 0;transition:color .2s}
+    .read-more-btn:hover{color:var(--accent-2)}
   </style>
 
   <script>
@@ -131,6 +135,7 @@
             var date = new Date(u.published_at || u.created_at).toLocaleDateString(undefined, { year:'numeric', month:'long', day:'numeric' });
             var pinHtml = u.pinned ? ' <span class="pin-badge">📌 Pinned</span>' : '';
 
+            var hasContent = u.content && u.content.trim();
             card.innerHTML =
               '<h2>' + esc(u.title) + '</h2>' +
               '<div class="meta">' +
@@ -139,7 +144,17 @@
                 pinHtml +
               '</div>' +
               (u.summary ? '<p class="summary">' + esc(u.summary) + '</p>' : '') +
-              '<div class="content">' + u.content + '</div>';
+              (hasContent ? '<button class="read-more-btn">Read more ▾</button>' +
+              '<div class="content">' + u.content + '</div>' : '');
+
+            if (hasContent) {
+              var btn = card.querySelector('.read-more-btn');
+              var contentEl = card.querySelector('.content');
+              btn.addEventListener('click', function() {
+                var open = contentEl.classList.toggle('expanded');
+                btn.textContent = open ? 'Show less ▴' : 'Read more ▾';
+              });
+            }
             list.appendChild(card);
           });
 
