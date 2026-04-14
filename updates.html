@@ -35,10 +35,123 @@
     <section class="container content">
       <h1>Project Updates</h1>
       <p class="lead">Recent changes, project milestones, and announcements from MLP.</p>
-      <p>We publish short updates about dataset releases, tooling improvements, and community events. Subscribe to updates via the contact page.</p>
-      <p><strong>This page will expand</strong> with a chronological list of updates.</p>
+
+      <!-- Category filter -->
+      <div class="updates-filter" style="margin-bottom:24px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="filter-btn active" data-cat="">All</button>
+        <button class="filter-btn" data-cat="general">General</button>
+        <button class="filter-btn" data-cat="release">Release</button>
+        <button class="filter-btn" data-cat="announcement">Announcement</button>
+        <button class="filter-btn" data-cat="milestone">Milestone</button>
+        <button class="filter-btn" data-cat="community">Community</button>
+      </div>
+
+      <div id="updates-loading" style="text-align:center;padding:40px;color:var(--muted)">Loading updates…</div>
+      <div id="updates-empty" style="display:none;text-align:center;padding:40px;color:var(--muted)">No updates yet. Check back soon!</div>
+      <div id="updates-list"></div>
+      <div id="updates-more" style="display:none;text-align:center;margin-top:24px">
+        <button id="load-more-btn" class="btn-primary" style="padding:10px 28px;border-radius:8px;border:none;font-size:15px;cursor:pointer;color:#fff;background:var(--accent)">Load More</button>
+      </div>
     </section>
   </main>
+
+  <style>
+    .filter-btn{padding:6px 16px;border:1px solid var(--border,#ddd);border-radius:20px;background:transparent;cursor:pointer;font-size:13px;transition:all .2s;color:var(--fg,#222)}
+    .filter-btn:hover{border-color:var(--accent,#0071e3);color:var(--accent,#0071e3)}
+    .filter-btn.active{background:var(--accent,#0071e3);color:#fff;border-color:var(--accent,#0071e3)}
+    .update-card{background:var(--card-bg,#fff);border:1px solid var(--border,#e0e0e0);border-radius:12px;padding:24px;margin-bottom:16px;transition:box-shadow .2s}
+    .update-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08)}
+    .update-card h2{font-size:1.25rem;margin-bottom:6px}
+    .update-card .meta{font-size:13px;color:var(--muted,#888);margin-bottom:10px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .update-card .cat-badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;text-transform:uppercase;background:var(--accent-bg,#e8f0fe);color:var(--accent,#0071e3)}
+    .update-card .pin-badge{color:#b87300;font-size:12px}
+    .update-card .summary{color:var(--muted,#666);font-size:14px;margin-bottom:8px}
+    .update-card .content{line-height:1.7}
+  </style>
+
+  <script>
+  (function() {
+    var API = 'https://calendar-api.teiteipara.workers.dev';
+    var currentCat = '';
+    var currentPage = 1;
+    var pageSize = 10;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      loadUpdates();
+      document.querySelectorAll('.filter-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          currentCat = btn.dataset.cat;
+          currentPage = 1;
+          document.getElementById('updates-list').innerHTML = '';
+          loadUpdates();
+        });
+      });
+      document.getElementById('load-more-btn').addEventListener('click', function() {
+        currentPage++;
+        loadUpdates(true);
+      });
+    });
+
+    function loadUpdates(append) {
+      var loading = document.getElementById('updates-loading');
+      var empty = document.getElementById('updates-empty');
+      var list = document.getElementById('updates-list');
+      var more = document.getElementById('updates-more');
+
+      if (!append) loading.style.display = '';
+
+      var url = API + '/api/updates?page=' + currentPage + '&limit=' + pageSize;
+      if (currentCat) url += '&category=' + currentCat;
+
+      fetch(url)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          loading.style.display = 'none';
+          var updates = data.updates || [];
+          if (!updates.length && !append) {
+            empty.style.display = '';
+            more.style.display = 'none';
+            return;
+          }
+          empty.style.display = 'none';
+
+          updates.forEach(function(u) {
+            var card = document.createElement('div');
+            card.className = 'update-card';
+
+            var date = new Date(u.published_at || u.created_at).toLocaleDateString(undefined, { year:'numeric', month:'long', day:'numeric' });
+            var pinHtml = u.pinned ? ' <span class="pin-badge">📌 Pinned</span>' : '';
+
+            card.innerHTML =
+              '<h2>' + esc(u.title) + '</h2>' +
+              '<div class="meta">' +
+                '<span>' + date + '</span>' +
+                '<span class="cat-badge">' + esc(u.category) + '</span>' +
+                pinHtml +
+              '</div>' +
+              (u.summary ? '<p class="summary">' + esc(u.summary) + '</p>' : '') +
+              '<div class="content">' + u.content + '</div>';
+            list.appendChild(card);
+          });
+
+          // Show/hide load more
+          var totalShown = currentPage * pageSize;
+          more.style.display = totalShown < data.total ? '' : 'none';
+        })
+        .catch(function() {
+          loading.textContent = 'Unable to load updates. Please try again later.';
+        });
+    }
+
+    function esc(str) {
+      var d = document.createElement('div');
+      d.textContent = str || '';
+      return d.innerHTML;
+    }
+  })();
+  </script>
 
   <footer class="site-footer site-footer--mlp" role="contentinfo">
     <div class="footer-top">

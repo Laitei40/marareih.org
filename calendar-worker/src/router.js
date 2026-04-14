@@ -1,6 +1,7 @@
 import { handleCalendars } from './handlers/calendars.js';
 import { handleEvents } from './handlers/events.js';
 import { handleIcs } from './handlers/ics.js';
+import { handleUpdates } from './handlers/updates.js';
 import { serveAdmin } from './handlers/admin.js';
 import { cors, jsonResponse } from './utils.js';
 
@@ -17,6 +18,11 @@ export async function handleRequest(request, env, ctx) {
     // Public ICS endpoint: /api/calendar/:slug.ics
     if (path.match(/^\/api\/calendar\/[\w-]+\.ics$/)) {
       return handleIcs(request, env, path);
+    }
+
+    // Updates (public + admin)
+    if (path.startsWith('/api/updates') || path.startsWith('/api/admin/updates')) {
+      return handleUpdates(request, env, path);
     }
 
     // Event CRUD (must be checked before calendar CRUD)
