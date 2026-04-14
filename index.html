@@ -137,13 +137,13 @@
       </div>
     </section>
 
-    <section class="container" aria-label="Latest Updates" style="padding-bottom:2.5rem">
+    <section class="container" aria-label="Latest Updates" data-anim="fade-up" style="padding-bottom:2.5rem">
       <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1rem">
         <h2 style="margin:0">Latest Updates</h2>
-        <a href="updates.html" style="font-size:.9rem;color:var(--accent,#0071e3);text-decoration:none">View all →</a>
+        <a href="updates.html" style="font-size:.9rem;color:var(--accent);text-decoration:none;transition:color .2s" onmouseover="this.style.color='var(--accent-2)'" onmouseout="this.style.color='var(--accent)'">View all →</a>
       </div>
       <div id="home-updates" class="grid" style="gap:1.25rem">
-        <p id="home-updates-loading" style="color:var(--text-muted,#6e6e73)">Loading updates…</p>
+        <p id="home-updates-loading" style="color:var(--muted)">Loading updates…</p>
       </div>
     </section>
   </main>
@@ -214,6 +214,7 @@
     </div>
   </footer>
 
+<style>@keyframes homeUpdateIn{to{opacity:1;transform:translateY(0)}}</style>
 <script>
 (function(){
   var API='https://calendar-api.teiteipara.workers.dev';
@@ -226,18 +227,20 @@
     .then(function(data){
       var items=data.updates||[];
       loader.remove();
-      if(!items.length){wrap.innerHTML='<p style="color:var(--text-muted,#6e6e73)">No updates yet.</p>';return;}
-      items.forEach(function(u){
+      if(!items.length){wrap.innerHTML='<p style="color:var(--muted)">No updates yet.</p>';return;}
+      items.forEach(function(u,i){
         var card=document.createElement('article');
         card.className='feature';
-        card.style.cursor='pointer';
+        card.style.cssText='cursor:pointer;opacity:0;transform:translateY(14px);animation:homeUpdateIn .45s cubic-bezier(.2,.9,.3,1) forwards;animation-delay:'+(i*0.08)+'s;transition:box-shadow .3s,transform .3s';
+        card.onmouseenter=function(){this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 28px rgba(0,0,0,.1)'};
+        card.onmouseleave=function(){this.style.transform='';this.style.boxShadow=''};
         card.onclick=function(){window.location.href='updates.html';};
         var badge=u.category&&u.category!=='general'
-          ?'<span style="display:inline-block;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:6px;background:rgba(6,182,164,.12);color:var(--accent,#06b6a4);margin-bottom:.35rem">'+esc(u.category)+'</span><br>':'';
+          ?'<span style="display:inline-block;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:6px;background:rgba(6,182,164,.12);color:var(--accent);margin-bottom:.35rem">'+esc(u.category)+'</span><br>':'';
         var pin=u.pinned?'<span style="font-size:.75rem;margin-left:6px" title="Pinned">📌</span>':'';
         var date=u.published_at?new Date(u.published_at).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}):'';
         card.innerHTML=badge+'<h3 style="margin-bottom:.25rem">'+esc(u.title)+pin+'</h3>'
-          +(date?'<time style="font-size:.78rem;color:var(--text-muted,#6e6e73)">'+date+'</time>':'')
+          +(date?'<time style="font-size:.78rem;color:var(--muted)">'+date+'</time>':'')
           +(u.summary?'<p style="margin-top:.4rem;font-size:.88rem">'+esc(u.summary)+'</p>':'');
         wrap.appendChild(card);
       });
